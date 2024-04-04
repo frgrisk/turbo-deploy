@@ -1,0 +1,28 @@
+.align-with-icon {
+    display: flex;
+    align-items: center; /* Vertically aligns the flex items */
+    gap: 8px; /* Optional: Adds some space between the icon and the text */
+  }
+
+  .action-button {
+    transform: scale(0.9)
+  }
+  
+  .disabled-button {
+    color: grey;
+  }
+
+  .start-button {
+    color:green;
+  }
+
+  .stop-button {
+    color: red;
+    
+  }
+
+.spinner-container {
+  display:inline-flex;
+  width:48px;
+justify-content: center;
+}

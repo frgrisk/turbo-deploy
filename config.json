@@ -1,0 +1,15 @@
+{
+  "serverSizes": [
+    "t2.micro",
+    "t2.small",
+    "t2.medium",
+    "t3.micro",
+    "t3.small",
+    "t3.medium"
+  ],
+  "amis": [
+    "ami-02d7fd1c2af6eead0",
+    "ami-0f403e3180720dd7e",
+    "ami-0d7a109bf30624c99"
+  ]
+}

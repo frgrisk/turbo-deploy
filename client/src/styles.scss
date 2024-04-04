@@ -1,0 +1,11 @@
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.deployment-dashboard, .create-deployment, .edit-deployment{
+    padding: 32px;
+}
+
+.header {
+    background-color: #f6f6f6 !important;
+}

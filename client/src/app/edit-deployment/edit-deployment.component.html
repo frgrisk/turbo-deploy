@@ -1,0 +1,95 @@
+<form [formGroup]="editDeploymentForm">
+    <div class="edit-deployment">
+        <mat-card style="width:40%">
+            <mat-card-header style="display:flex; flex-direction:row; gap:4px">
+                <button color="primary" routerLink="" mat-icon-button aria-label="Back to home">
+                    <mat-icon>keyboard_arrow_left</mat-icon>
+                </button>
+                <mat-card-title-group>
+                    <mat-card-title>
+                        Edit Deployment</mat-card-title>
+                     <mat-card-subtitle>Edit existing deployment here</mat-card-subtitle>
+                  </mat-card-title-group>
+                </mat-card-header>
+            <mat-card-content style="padding:32px; display:flex; flex-direction:column; gap:4px;">
+               <div *ngIf="!apiService.formEditLoading(); else spinner">
+                <div >
+                    <p>Basic Configuration</p>
+                    <div style="display:flex; flex-direction:column;">
+                        <mat-form-field floatLabel="always" appearance="outline">
+                            <mat-label>Hostname</mat-label>
+                            <input formControlName="hostname" matInput placeholder="">
+                        </mat-form-field>  
+                        <mat-form-field floatLabel="always" appearance="outline">
+                            <mat-label>Region</mat-label>
+                            <mat-select formControlName="region">
+                                <mat-option *ngFor="let region of regions" [value]="region">{{ region }}</mat-option>
+                              </mat-select>
+                        </mat-form-field>  
+                    </div>
+                </div>
+                <div>
+                    <p>Instance Details</p>
+                    <div style="display:flex; flex-direction:column;">
+                        <mat-form-field floatLabel="always" appearance="outline">
+                            <mat-label>AMI Choice</mat-label>
+                            <mat-select formControlName="ami">
+                                <mat-option *ngFor="let ami of amis" [value]="ami">{{ ami }}</mat-option>
+                              </mat-select>
+                        </mat-form-field>  
+                        <mat-form-field floatLabel="always" appearance="outline">
+                            <mat-label>Server Size</mat-label>
+                            <mat-select formControlName="serverSize">
+                                <mat-option *ngFor="let size of serverSizes" [value]="size">{{ size }}</mat-option>
+                              </mat-select>
+                        </mat-form-field>  
+                    </div>
+                </div>
+                <div>
+                    <p>Deployment Settings</p>
+                    <div style="display:flex; flex-direction:row; gap:24px">
+                        <mat-form-field style="flex:1" floatLabel="always" appearance="outline">
+                            <mat-label>Lifecycle</mat-label>
+                            <mat-select formControlName="lifecycle">
+                                <mat-option *ngFor="let lifecycle of lifecycles" [value]="lifecycle.toLowerCase()">{{ lifecycle }}</mat-option>
+                              </mat-select>
+                        </mat-form-field>  
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction: column" >
+                    <div style="display:flex; flex-direction: row; align-items: center;">
+                        <p style="margin:0px">Expiry (TTL) Settings (Optional)</p>
+                        <button  style="transform: scale(0.9)" (click)="resetExpiryForm()" mat-icon-button aria-label="Back to home">
+                            <mat-icon >undo</mat-icon>
+                        </button>
+                    </div>
+                    <div style="color:#757575; font-style: italic; margin-bottom:2px;">
+                        <p> Current Expiry: <span> {{currentExpiry}} </span></p>
+                    </div>
+                    <div style="display:flex; flex-direction:row; gap:24px">
+                            <mat-form-field style="flex:1"  floatLabel="always" appearance="outline">
+                                <mat-label>Duration of Reservation </mat-label>
+                                <input type="number" formControlName="ttlValue" matInput placeholder="">
+                            </mat-form-field>  
+                            <mat-form-field style="flex:2"  floatLabel="always" appearance="outline">
+                                <mat-label>Unit</mat-label>
+                                <mat-select formControlName="ttlUnit">
+                                    <mat-option *ngFor="let ttlUnit of ttlUnits" [value]="ttlUnit.toLowerCase()">{{ ttlUnit }}(s)</mat-option>
+                                  </mat-select>
+                            </mat-form-field>  
+                    </div>
+                </div>
+               </div>
+               <ng-template #spinner>
+                <div class="spinner-container">
+                    <mat-spinner></mat-spinner>
+                </div>
+               </ng-template>
+            </mat-card-content>
+            <mat-card-actions style="display:flex; padding:32px; padding-top:0px">
+                <div style="flex: 1"></div>
+                <button mat-flat-button (click)="submitForm()" [disabled]="!editDeploymentForm.valid" color="primary">Deploy</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</form>
