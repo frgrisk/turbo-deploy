@@ -43,7 +43,7 @@ resource "null_resource" "build_and_push_docker_image" {
     command = <<EOT
       cd ${path.module}/ecr-scripts
       chmod +x deploy_lambda.sh
-      ./deploy_lambda.sh
+      AWS_REGION="${var.aws_region}" ./deploy_lambda.sh
     EOT
   }
   depends_on = [aws_ecr_repository.tf_lambda_ecr_repository, null_resource.copy_main_tf]

@@ -1,3 +1,4 @@
+import sys
 import boto3
 import json
 from decimal import Decimal
@@ -10,9 +11,13 @@ def default(obj):
         else:
             return float(obj)
     raise TypeError("Object of type '%s' is not JSON serializable" % type(obj).__name__)
-
+# Read input from stdin
+input_json = sys.stdin.read()
+input_data = json.loads(input_json)
 # Initialize a DynamoDB client
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+aws_region = input_data.get('aws_region', 'ap-southeast-3')
+
+dynamodb = boto3.resource("dynamodb", region_name=aws_region)
 table_name = "http_crud_backend"
 table = dynamodb.Table(table_name)
 

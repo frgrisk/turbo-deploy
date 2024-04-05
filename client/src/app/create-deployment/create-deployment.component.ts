@@ -4,30 +4,30 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Lifecycle, Region, TimeUnit } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { Router } from '@angular/router';
-import {
-  MatSnackBar,
-} from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { convertToHours } from '../shared/util/time.util';
-
 
 @Component({
   selector: 'app-create-deployment',
   templateUrl: './create-deployment.component.html',
-  styleUrls: ['./create-deployment.component.scss']
+  styleUrls: ['./create-deployment.component.scss'],
 })
-export class CreateDeploymentComponent implements OnInit{
+export class CreateDeploymentComponent implements OnInit {
   private ngUnsubscribe = new Subject<void>();
 
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: Region[] = [Region.US_EAST_1];
+  regions: Region[] = [Region.AP_SOUTHEAST_3];
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
-  ttlUnits: TimeUnit[] = [TimeUnit.HOURS,TimeUnit.DAYS,TimeUnit.MONTHS];
+  ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
 
-  constructor(public apiService: ApiService, private router: Router, private _snackBar: MatSnackBar) {
-  }
+  constructor(
+    public apiService: ApiService,
+    private router: Router,
+    private _snackBar: MatSnackBar
+  ) {}
 
   ngOnInit() {
     this.initializeForm();
@@ -36,43 +36,46 @@ export class CreateDeploymentComponent implements OnInit{
 
   initializeForm() {
     this.deploymentForm = new FormGroup({
-      hostname: new FormControl("", [Validators.required]),
-      region: new FormControl("", [Validators.required]),
-      ami: new FormControl("", [Validators.required]),
-      serverSize: new FormControl("", [Validators.required]),
+      hostname: new FormControl('', [Validators.required]),
+      region: new FormControl('', [Validators.required]),
+      ami: new FormControl('', [Validators.required]),
+      serverSize: new FormControl('', [Validators.required]),
       lifecycle: new FormControl(Lifecycle.ON_DEMAND, [Validators.required]),
-      ttlValue: new FormControl("", [Validators.min(1)]),
-      ttlUnit: new FormControl("")});
+      ttlValue: new FormControl('', [Validators.min(1)]),
+      ttlUnit: new FormControl(''),
+    });
 
-      this.deploymentForm.get('ttlValue')?.valueChanges
-      .subscribe(() => {
-        if (!this.deploymentForm.get('ttlUnit')?.value) {
-          this.deploymentForm.get('ttlUnit')?.patchValue(TimeUnit.HOURS, { emitEvent: false });
-        }
-      });
-    
-    this.deploymentForm.get('ttlUnit')?.valueChanges
-      .subscribe(() => {
-        if (!this.deploymentForm.get('ttlValue')?.value) {
-          this.deploymentForm.get('ttlValue')?.patchValue(1, { emitEvent: false });
-        }
-      });
+    this.deploymentForm.get('ttlValue')?.valueChanges.subscribe(() => {
+      if (!this.deploymentForm.get('ttlUnit')?.value) {
+        this.deploymentForm
+          .get('ttlUnit')
+          ?.patchValue(TimeUnit.HOURS, { emitEvent: false });
+      }
+    });
+
+    this.deploymentForm.get('ttlUnit')?.valueChanges.subscribe(() => {
+      if (!this.deploymentForm.get('ttlValue')?.value) {
+        this.deploymentForm
+          .get('ttlValue')
+          ?.patchValue(1, { emitEvent: false });
+      }
+    });
   }
 
   initializeAWSData() {
-    this.apiService.getAWSData().subscribe(data => {
+    this.apiService.getAWSData().subscribe((data) => {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
 
-      this.deploymentForm.get('serverSize')?.patchValue("t1.micro")
-      this.deploymentForm.get('ami')?.patchValue(this.amis[0])
-      this.deploymentForm.get('region')?.patchValue(Region.US_EAST_1)
-    })
+      this.deploymentForm.get('serverSize')?.patchValue('t1.micro');
+      this.deploymentForm.get('ami')?.patchValue(this.amis[0]);
+      this.deploymentForm.get('region')?.patchValue(Region.AP_SOUTHEAST_3);
+    });
   }
 
   resetExpiryForm() {
-    this.deploymentForm.get('ttlValue')?.patchValue("", { emitEvent: false })
-    this.deploymentForm.get('ttlUnit')?.patchValue("", { emitEvent: false })
+    this.deploymentForm.get('ttlValue')?.patchValue('', { emitEvent: false });
+    this.deploymentForm.get('ttlUnit')?.patchValue('', { emitEvent: false });
   }
 
   submitForm() {
@@ -85,26 +88,25 @@ export class CreateDeploymentComponent implements OnInit{
       lifecycle: form.lifecycle,
     };
 
-    const ttlValue = this.deploymentForm.get('ttlValue')?.value
-    const ttlUnit = this.deploymentForm.get('ttlUnit')?.value
+    const ttlValue = this.deploymentForm.get('ttlValue')?.value;
+    const ttlUnit = this.deploymentForm.get('ttlUnit')?.value;
 
     if (ttlValue && ttlUnit) {
-      apiPayload.ttlValue = convertToHours(ttlValue,ttlUnit)
-      apiPayload.ttlUnit = "h"
+      apiPayload.ttlValue = convertToHours(ttlValue, ttlUnit);
+      apiPayload.ttlUnit = 'h';
     }
 
-    this.apiService.createDeployment(apiPayload).subscribe(
-      () => {
-        this.router.navigate(['/']);
-        this.successSnackBar();
-      }
-    )
+    this.apiService.createDeployment(apiPayload).subscribe(() => {
+      this.router.navigate(['/']);
+      this.successSnackBar();
+    });
   }
-  
+
   successSnackBar() {
-    const message = "Deployment initiated. Please wait a few minutes and refresh the page ";
+    const message =
+      'Deployment initiated. Please wait a few minutes and refresh the page ';
     this._snackBar.open(message, 'Close', {
-      duration: 30000, 
+      duration: 30000,
     });
   }
 

@@ -12,7 +12,7 @@ import { convertDateTime, convertToHours } from '../shared/util/time.util';
 @Component({
   selector: 'app-edit-deployment',
   templateUrl: './edit-deployment.component.html',
-  styleUrl: './edit-deployment.component.scss'
+  styleUrl: './edit-deployment.component.scss',
 })
 export class EditDeploymentComponent {
   private ngUnsubscribe = new Subject<void>();
@@ -20,14 +20,17 @@ export class EditDeploymentComponent {
   editDeploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: Region[] = [Region.US_EAST_1];
+  regions: Region[] = [Region.AP_SOUTHEAST_3];
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
-  ttlUnits: TimeUnit[] = [TimeUnit.HOURS,TimeUnit.DAYS,TimeUnit.MONTHS];
-  currentExpiry: string = "";
+  ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
+  currentExpiry: string = '';
 
-  constructor(public apiService: ApiService, private router: Router, private _snackBar: MatSnackBar,  private deploymentService: DeploymentsService) {
-
-  }
+  constructor(
+    public apiService: ApiService,
+    private router: Router,
+    private _snackBar: MatSnackBar,
+    private deploymentService: DeploymentsService
+  ) {}
 
   ngOnInit() {
     this.initializeForm();
@@ -36,55 +39,59 @@ export class EditDeploymentComponent {
 
   initializeForm() {
     this.editDeploymentForm = new FormGroup({
-      id: new FormControl(""),
-      hostname: new FormControl("", [Validators.required]),
-      region: new FormControl("", [Validators.required]),
-      ami: new FormControl("", [Validators.required]),
-      serverSize: new FormControl("", [Validators.required]),
+      id: new FormControl(''),
+      hostname: new FormControl('', [Validators.required]),
+      region: new FormControl('', [Validators.required]),
+      ami: new FormControl('', [Validators.required]),
+      serverSize: new FormControl('', [Validators.required]),
       lifecycle: new FormControl(Lifecycle.ON_DEMAND, [Validators.required]),
-      ttlValue: new FormControl("", [Validators.min(1)]),
-      ttlUnit: new FormControl("")});
+      ttlValue: new FormControl('', [Validators.min(1)]),
+      ttlUnit: new FormControl(''),
+    });
 
-      this.editDeploymentForm.get('ttlValue')?.valueChanges
-      .subscribe(() => {
-        if (!this.editDeploymentForm.get('ttlUnit')?.value) {
-          this.editDeploymentForm.get('ttlUnit')?.patchValue(TimeUnit.HOURS, { emitEvent: false });
-        }
-      });
-    
-    this.editDeploymentForm.get('ttlUnit')?.valueChanges
-      .subscribe(() => {
-        if (!this.editDeploymentForm.get('ttlValue')?.value) {
-          this.editDeploymentForm.get('ttlValue')?.patchValue(1, { emitEvent: false });
-        }
-      });
+    this.editDeploymentForm.get('ttlValue')?.valueChanges.subscribe(() => {
+      if (!this.editDeploymentForm.get('ttlUnit')?.value) {
+        this.editDeploymentForm
+          .get('ttlUnit')
+          ?.patchValue(TimeUnit.HOURS, { emitEvent: false });
+      }
+    });
+
+    this.editDeploymentForm.get('ttlUnit')?.valueChanges.subscribe(() => {
+      if (!this.editDeploymentForm.get('ttlValue')?.value) {
+        this.editDeploymentForm
+          .get('ttlValue')
+          ?.patchValue(1, { emitEvent: false });
+      }
+    });
   }
 
   initializeData() {
-    this.apiService.getAWSData().
-    pipe(
-      tap((data) => {
-        this.serverSizes = data.serverSizes;
-        this.amis = data.amis;
-      }),
-      switchMap(() => this.deploymentService.currentEdit$),
-      filter((editObject): editObject is string => !!editObject),
-      switchMap((editObject) => this.apiService.getDeployment(editObject)),
-      takeUntil(this.ngUnsubscribe)
-    ).subscribe((response: any)=> 
-    {
-      this.editDeploymentForm.reset({}, { emitEvent: false });
-      this.editDeploymentForm.patchValue({
-        id: response.ID,
-        hostname: response.Hostname,
-        region: response.Region,
-        ami: response.Ami,
-        serverSize: response.ServerSize,
-        lifecycle: response.Lifecycle,
-      }), { emitEvent: false };
-      this.currentExpiry = convertDateTime(response.TimeToExpire)
-   }
-  )
+    this.apiService
+      .getAWSData()
+      .pipe(
+        tap((data) => {
+          this.serverSizes = data.serverSizes;
+          this.amis = data.amis;
+        }),
+        switchMap(() => this.deploymentService.currentEdit$),
+        filter((editObject): editObject is string => !!editObject),
+        switchMap((editObject) => this.apiService.getDeployment(editObject)),
+        takeUntil(this.ngUnsubscribe)
+      )
+      .subscribe((response: any) => {
+        this.editDeploymentForm.reset({}, { emitEvent: false });
+        this.editDeploymentForm.patchValue({
+          id: response.ID,
+          hostname: response.Hostname,
+          region: response.Region,
+          ami: response.Ami,
+          serverSize: response.ServerSize,
+          lifecycle: response.Lifecycle,
+        }),
+          { emitEvent: false };
+        this.currentExpiry = convertDateTime(response.TimeToExpire);
+      });
   }
 
   submitForm() {
@@ -98,31 +105,34 @@ export class EditDeploymentComponent {
       lifecycle: form.lifecycle,
     };
 
-    const ttlValue = this.editDeploymentForm.get('ttlValue')?.value
-    const ttlUnit = this.editDeploymentForm.get('ttlUnit')?.value
+    const ttlValue = this.editDeploymentForm.get('ttlValue')?.value;
+    const ttlUnit = this.editDeploymentForm.get('ttlUnit')?.value;
 
     if (ttlValue && ttlUnit) {
-      apiPayload.ttlValue = convertToHours(ttlValue,ttlUnit)
-      apiPayload.ttlUnit = "h"
+      apiPayload.ttlValue = convertToHours(ttlValue, ttlUnit);
+      apiPayload.ttlUnit = 'h';
     }
 
-    this.apiService.editDeployment(apiPayload).subscribe(
-      () => {
-        this.router.navigate(['/']);
-        this.successSnackBar();
-      }
-    )
+    this.apiService.editDeployment(apiPayload).subscribe(() => {
+      this.router.navigate(['/']);
+      this.successSnackBar();
+    });
   }
 
   resetExpiryForm() {
-    this.editDeploymentForm.get('ttlValue')?.patchValue("", { emitEvent: false })
-    this.editDeploymentForm.get('ttlUnit')?.patchValue("", { emitEvent: false })
+    this.editDeploymentForm
+      .get('ttlValue')
+      ?.patchValue('', { emitEvent: false });
+    this.editDeploymentForm
+      .get('ttlUnit')
+      ?.patchValue('', { emitEvent: false });
   }
-  
+
   successSnackBar() {
-    const message = "Deployment editied and initiated. Please wait a few minutes and refresh the page ";
+    const message =
+      'Deployment editied and initiated. Please wait a few minutes and refresh the page ';
     this._snackBar.open(message, 'Close', {
-      duration: 30000, 
+      duration: 30000,
     });
   }
 
@@ -130,5 +140,4 @@ export class EditDeploymentComponent {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
-
 }
