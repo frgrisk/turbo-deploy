@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket         = "terraform-lambda-deploy-state"
+    bucket         = "terraform-lambda-deploy-state-tzl-test-us"
     key            = "terraform-backend/terraform.tfstate"
-    region         = "ap-southeast-3"
+    region         = "us-east-1"
     dynamodb_table = "terraform-lambda-deploy-locks"
     encrypt        = true
   }
@@ -14,6 +14,11 @@ terraform {
 }
 
 provider "aws" {
-  region = "ap-southeast-3"
+  region = "us-east-1"
 }
 
+variable "aws_region" {
+  description = "The AWS region to deploy resources into"
+  type = string
+  default = "us-east-1"
+}
