@@ -15,7 +15,7 @@ def default(obj):
 input_json = sys.stdin.read()
 input_data = json.loads(input_json)
 # Initialize a DynamoDB client
-aws_region = input_data.get('aws_region', 'ap-southeast-3')
+aws_region = input_data.get('aws_region', 'us-east-1')
 
 dynamodb = boto3.resource("dynamodb", region_name=aws_region)
 table_name = "http_crud_backend"
