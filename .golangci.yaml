@@ -1,0 +1,24 @@
+run:
+  skip-files:
+
+linters:
+  enable:
+    - staticcheck
+    - revive
+    - gofmt
+    - tenv
+    - misspell
+    - asciicheck
+    - gocritic
+    - gosec
+    - gofumpt
+    - unconvert
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - shadow
+
+output:
+  formats: github-actions

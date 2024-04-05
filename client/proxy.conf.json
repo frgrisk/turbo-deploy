@@ -1,6 +1,6 @@
 {
   "/dev": {
-    "target": "http://localhost:8080/",
+    "target": "https://vp30qs5se8.execute-api.ap-southeast-3.amazonaws.com/test/",
     "secure": false,
     "changeOrigin": true,
     "pathRewrite": { "^/dev": "" },

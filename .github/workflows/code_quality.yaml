@@ -1,0 +1,46 @@
+name: Code Quality Checks
+
+on: [push, workflow_dispatch]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prettier:
+    runs-on: self-hosted
+    steps:
+      - name: Check that PR title conforms to conventional commits
+        if: github.event_name == 'pull_request'
+        run: |
+          echo '${{ github.event.pull_request.title }}' | grep -qP '^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([a-zA-Z0-9_\-\*]+\))?:\s.+' \
+          || (echo "::error ::PR title must match regex (see https://regex101.com/r/AyDqhZ/1): ^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([a-zA-Z0-9_\-\*]+\))?:\s.+" && exit 1)
+
+  golangci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: false
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          working-directory: ./server
+          version: latest
+          args: --timeout 5m --config=../.golangci.yaml -v
+
+  detect-console-log:
+    name: Console Log Detection
+    runs-on: self-hosted
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Detect console.log()
+        run: |
+          ! git grep -E "console\.log\(" -- '*.ts'
