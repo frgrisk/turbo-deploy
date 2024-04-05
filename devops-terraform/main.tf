@@ -16,9 +16,10 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "ap-southeast-3"
 }
 
 module "my_turbo_module" {
-  source = "../modules/turbo-deploy-module"
+  source     = "../modules/turbo-deploy-module"
+  aws_region = "ap-southeast-3"
 }

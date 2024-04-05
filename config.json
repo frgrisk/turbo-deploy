@@ -7,9 +7,5 @@
     "t3.small",
     "t3.medium"
   ],
-  "amis": [
-    "ami-02d7fd1c2af6eead0",
-    "ami-0f403e3180720dd7e",
-    "ami-0d7a109bf30624c99"
-  ]
+  "amis": ["ami-08771d6da4743ff63", "ami-05a2cb5da24dd20c3"]
 }
