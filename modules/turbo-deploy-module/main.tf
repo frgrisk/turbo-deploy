@@ -1,10 +1,22 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~>5.0"
+    }
+  }
+}
+
 data "template_file" "main_tf" {
   template = file("${path.module}/templates/main.tf.tpl")
 
   vars = {
-    bucket_name    = var.s3_tf_bucket_name
-    region         = var.aws_region
-    dynamodb_table = var.dynamodb_tf_locks_name
+    bucket_name             = var.s3_tf_bucket_name
+    region                  = var.aws_region
+    dynamodb_table          = var.dynamodb_tf_locks_name
+    security_group_id_input = var.security_group_id != null ? var.security_group_id : ""
+    public_subnet_id_input  = length(var.public_subnet_ids) > 0 ? element(var.public_subnet_ids, 0) : ""
+
   }
 }
 

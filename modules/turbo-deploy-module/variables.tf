@@ -4,6 +4,18 @@ variable "ecr_repository_name" {
   default     = "my-tf-function"
 }
 
+variable "security_group_id" {
+  description = "id of security group associated with ec2 deployment"
+  type        = string
+  default     = null
+}
+
+variable "public_subnet_ids" {
+  description = "ids of public subnet associated with ec2 deployment"
+  type        = list(string)
+  default     = []
+}
+
 variable "aws_region" {
   description = "region to provision aws suite"
   type        = string

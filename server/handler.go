@@ -249,14 +249,14 @@ func GetAWSData(c *gin.Context) {
 		return
 	}
 
-	instanceTypes, err := GetEC2InstanceTypes(c.Request.Context())
-	if err != nil {
-		log.Printf("Error fetching EC2 instance types: %v", err)
-		abortWithLog(c, http.StatusInternalServerError, err)
-		return
-	}
+	// instanceTypes, err := GetEC2InstanceTypes(c.Request.Context())
+	// if err != nil {
+	// 	log.Printf("Error fetching EC2 instance types: %v", err)
+	// 	abortWithLog(c, http.StatusInternalServerError, err)
+	// 	return
+	// }
 
-	config.ServerSizes = instanceTypes
+	// config.ServerSizes = instanceTypes
 
 	c.JSON(http.StatusOK, config)
 }

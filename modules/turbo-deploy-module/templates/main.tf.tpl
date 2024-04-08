@@ -22,3 +22,15 @@ variable "aws_region" {
   type = string
   default = "${region}"
 }
+
+variable "security_group_id" {
+  description = "id of security group associated with ec2 deployment"
+  type        = string
+  default = "${security_group_id_input}"
+}
+
+variable "public_subnet_id" {
+  description = "ids of public subnet associated with ec2 deployment"
+  type        = string
+  default = "${public_subnet_id_input}"
+}

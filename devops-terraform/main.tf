@@ -20,6 +20,9 @@ provider "aws" {
 }
 
 module "my_turbo_module" {
+  providers = {
+    aws = aws
+  }
   source     = "../modules/turbo-deploy-module"
   aws_region = "ap-southeast-3"
 }

@@ -67,7 +67,7 @@ export class CreateDeploymentComponent implements OnInit {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
 
-      this.deploymentForm.get('serverSize')?.patchValue('t1.micro');
+      this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0]);
       this.deploymentForm.get('region')?.patchValue(Region.AP_SOUTHEAST_3);
     });
