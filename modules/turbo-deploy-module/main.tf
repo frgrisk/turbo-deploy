@@ -420,11 +420,24 @@ resource "aws_iam_role_policy_attachment" "golang_lambda_policy_attach" {
   policy_arn = aws_iam_policy.golang_lambda_policy.arn
 }
 
+resource "null_resource" "generate_lambda_zip" {
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      chmod +x ${path.module}/../../generate_zip.sh
+      ${path.module}/../../generate_zip.sh ${path.module}
+    EOF
+  }
+}
+
 resource "aws_lambda_function" "database_lambda" {
   function_name = var.database_lambda_function_name
 
   filename         = "${path.module}/${var.lambda_function_zip_path}"
-  source_code_hash = filebase64sha256("${path.module}/${var.lambda_function_zip_path}")
+  source_code_hash = fileexists("${path.module}/${var.lambda_function_zip_path}") ? filebase64sha256("${path.module}/${var.lambda_function_zip_path}") : ""
   handler          = "bootstrap"
   runtime          = "provided.al2023"
   role             = aws_iam_role.golang_lambda_exec.arn
@@ -434,6 +447,9 @@ resource "aws_lambda_function" "database_lambda" {
       MY_CUSTOM_ENV = "Lambda"
     }
   }
+
+  depends_on = [null_resource.generate_lambda_zip]
+
 }
 
 data "aws_ecr_image" "latest" {
