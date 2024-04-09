@@ -427,8 +427,10 @@ resource "null_resource" "generate_lambda_zip" {
 
   provisioner "local-exec" {
     command = <<EOF
-      chmod +x ${path.module}/../../generate_zip.sh
-      ${path.module}/../../generate_zip.sh ${path.module}
+      if [ ! -f "${path.module}/${var.lambda_function_zip_path}" ]; then
+        chmod +x ${path.module}/../../generate_zip.sh
+        ${path.module}/../../generate_zip.sh ${path.module}
+      fi
     EOF
   }
 }
