@@ -1,6 +1,6 @@
 {
   "/dev": {
-    "target": "http://localhost:8080/",
+    "target": "https://turbo-deploy-api-gateway.frgrisk.dev/",
     "secure": false,
     "changeOrigin": true,
     "pathRewrite": { "^/dev": "" },

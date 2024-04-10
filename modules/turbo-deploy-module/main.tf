@@ -131,6 +131,14 @@ resource "aws_lambda_permission" "apigw" {
 
 }
 
+// if custom domain name is set, map to it
+resource "aws_api_gateway_base_path_mapping" "base_path_mapping" {
+  count       = var.api_gateway_domain_name != null && var.api_gateway_domain_name != "" ? 1 : 0
+  api_id      = aws_api_gateway_rest_api.my_api_gateway.id
+  stage_name  = aws_api_gateway_deployment.my_api_deployment.stage_name
+  domain_name = var.api_gateway_domain_name
+}
+
 // dynamodb table to store records posted from frontend
 resource "aws_dynamodb_table" "http_crud_backend" {
   name           = var.dynamodb_http_crud_backend_name

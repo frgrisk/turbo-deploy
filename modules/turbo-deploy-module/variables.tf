@@ -71,6 +71,12 @@ variable "api_gateway_name" {
   default     = "MyGolangLambdaAPI"
 }
 
+variable "api_gateway_domain_name" {
+  description = "custom domain name of api gateway"
+  type        = string
+  default     = ""
+}
+
 variable "database_lambda_function_name" {
   description = "Name of the lambda function stationed between API gateway and dynamoDB"
   type        = string
