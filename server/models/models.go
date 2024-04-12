@@ -19,6 +19,7 @@ type Response struct {
 
 type Payload struct {
 	Ami               string `json:"ami"`
+	InstanceID        string `json:"instanceId"`
 	ServerSize        string `json:"serverSize"`
 	Hostname          string `json:"hostname"`
 	Region            string `json:"region"`
@@ -40,6 +41,7 @@ type DeploymentResponse struct {
 	InstanceID       string `json:"ec2InstanceId"` // Represents ec2 instance id
 	Ami              string `json:"ami"`
 	ServerSize       string `json:"serverSize"`
+	SnapshotID       string `json:"snapshotId"`
 	Hostname         string `json:"hostname"`
 	AvailabilityZone string `json:"availabilityZone"`
 	Lifecycle        string `json:"lifecycle"`

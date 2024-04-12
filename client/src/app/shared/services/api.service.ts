@@ -6,7 +6,7 @@ import { environment } from 'src/environments/environment';
 import { ErrorDialogComponent } from '../components/error-dialog/error-dialog.component';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   formAWSDataLoading = signal<boolean>(true);
@@ -17,8 +17,10 @@ export class ApiService {
     return this.formAWSDataLoading() || this.formEditDataLoading();
   });
 
-  constructor(private http: HttpClient,  private dialog: MatDialog) { }
-
+  constructor(
+    private http: HttpClient,
+    private dialog: MatDialog,
+  ) {}
 
   private handleError(error: any): Observable<never> {
     const errorMessage = error.error.error || 'An unknown error occurred';
@@ -32,61 +34,70 @@ export class ApiService {
     return throwError(error);
   }
 
-
   getAWSData(): Observable<any> {
     this.formAWSDataLoading.set(true);
     return this.http.get(`${environment.apiBaseUrl}/awsdata`).pipe(
       catchError(this.handleError.bind(this)),
-      finalize(() => this.formAWSDataLoading.set(false))
+      finalize(() => this.formAWSDataLoading.set(false)),
     );
   }
 
   createDeployment(payload: any): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/instance-request`, payload).pipe(
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .post(`${environment.apiBaseUrl}/instance-request`, payload)
+      .pipe(catchError(this.handleError.bind(this)));
   }
 
   editDeployment(payload: any): Observable<any> {
-    return this.http.put(`${environment.apiBaseUrl}/instance-request/${payload.id}`, payload).pipe(
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .put(`${environment.apiBaseUrl}/instance-request/${payload.id}`, payload)
+      .pipe(catchError(this.handleError.bind(this)));
   }
 
   deleteDeployment(payloadID: string): Observable<any> {
-    return this.http.delete(`${environment.apiBaseUrl}/instance-request/${payloadID}`).pipe(
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .delete(`${environment.apiBaseUrl}/instance-request/${payloadID}`)
+      .pipe(catchError(this.handleError.bind(this)));
   }
 
-  getDeployments(tableLoading:boolean = true): Observable<any> {
+  getDeployments(tableLoading: boolean = true): Observable<any> {
     if (tableLoading) {
-    this.tableLoading.set(true);
+      this.tableLoading.set(true);
     }
     return this.http.get(`${environment.apiBaseUrl}/deployments`).pipe(
       catchError(this.handleError.bind(this)),
-      finalize(() => this.tableLoading.set(false))
+      finalize(() => this.tableLoading.set(false)),
     );
   }
 
   getDeployment(payloadID: string): Observable<any> {
     this.formEditDataLoading.set(true);
-    return this.http.get(`${environment.apiBaseUrl}/instance-request/${payloadID}`).pipe(
-      catchError(this.handleError.bind(this)),
-      finalize(() => this.formEditDataLoading.set(false))
-    );
+    return this.http
+      .get(`${environment.apiBaseUrl}/instance-request/${payloadID}`)
+      .pipe(
+        catchError(this.handleError.bind(this)),
+        finalize(() => this.formEditDataLoading.set(false)),
+      );
   }
 
   startInstance(payloadID: string): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/start-instance/${payloadID}`, null).pipe(
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .post(`${environment.apiBaseUrl}/start-instance/${payloadID}`, null)
+      .pipe(catchError(this.handleError.bind(this)));
   }
 
   stopInstance(payloadID: string): Observable<any> {
-    return this.http.post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null).pipe(
-      catchError(this.handleError.bind(this))
-    );
+    return this.http
+      .post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null)
+      .pipe(catchError(this.handleError.bind(this)));
   }
-  
+
+  captureInstanceSnapshopt(payload: any): Observable<any> {
+    return this.http
+      .put(
+        `${environment.apiBaseUrl}/capture-instance-snapshot/${payload.id}`,
+        payload,
+      )
+      .pipe(catchError(this.handleError.bind(this)));
+  }
 }
