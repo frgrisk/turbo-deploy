@@ -8,8 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
   standalone: true,
   imports: [MatButtonModule, MatDialogModule, MatIconModule],
   templateUrl: './error-dialog.component.html',
-  styleUrl: './error-dialog.component.scss'
+  styleUrl: './error-dialog.component.scss',
 })
 export class ErrorDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { status: number; message: string }) {}
+  constructor(
+    @Inject(MAT_DIALOG_DATA) public data: { status: number; message: string },
+  ) {}
 }
