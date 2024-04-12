@@ -97,13 +97,11 @@ export class DeploymentDashboardComponent {
       .getDeployments()
       .pipe(take(1))
       .subscribe((response: DeploymentApiResponse[]) => {
-        console.log(response);
         this.dataSource = response
           ? response.filter(
               (instance) => instance.status !== EC2Status.TERMINATED
             )
           : [];
-        console.log(this.dataSource);
       });
   }
 

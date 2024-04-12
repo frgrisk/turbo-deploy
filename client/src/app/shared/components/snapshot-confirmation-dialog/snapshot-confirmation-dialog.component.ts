@@ -22,10 +22,8 @@ export class SnapshotConfirmationDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: { instanceElement: any },
     public apiService: ApiService,
-    private _snackBar: MatSnackBar,
-  ) {
-    console.log('Received data:', this.data.instanceElement);
-  }
+    private _snackBar: MatSnackBar
+  ) {}
 
   onConfirm() {
     let apiPayload: DeploymentApiRequest = {

@@ -26,7 +26,7 @@ export class CreateDeploymentComponent implements OnInit {
   constructor(
     public apiService: ApiService,
     private router: Router,
-    private _snackBar: MatSnackBar,
+    private _snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -87,7 +87,6 @@ export class CreateDeploymentComponent implements OnInit {
       serverSize: form.serverSize,
       lifecycle: form.lifecycle,
     };
-    console.log(apiPayload);
 
     const ttlValue = this.deploymentForm.get('ttlValue')?.value;
     const ttlUnit = this.deploymentForm.get('ttlUnit')?.value;
