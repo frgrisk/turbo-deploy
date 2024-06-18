@@ -19,19 +19,19 @@ provider "aws" {
 
 variable "aws_region" {
   description = "The AWS region to deploy resources into"
-  type = string
-  default = "ap-southeast-3"
+  type        = string
+  default     = "ap-southeast-3"
 }
 
 variable "security_group_id" {
   description = "id of security group associated with ec2 deployment"
   type        = string
-  default = "sg-038aa4879f4f5d0b3"
+  default     = "sg-038aa4879f4f5d0b3"
 }
 
 variable "public_subnet_id" {
   description = "ids of public subnet associated with ec2 deployment"
   type        = string
-  default = "subnet-096228147e289acee"
+  default     = "subnet-096228147e289acee"
 }
 
