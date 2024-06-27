@@ -8,7 +8,28 @@ concurrency:
 
 jobs:
   prettier:
-    runs-on: self-hosted
+    name: Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out the repository
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: ./package-lock.json
+
+      - name: Install NPM packages
+        run: npm ci
+
+      - name: Check that all files are formatted with Prettier
+        run: npx prettier --check .
+
+  conventional_commits:
+    name: Convention Commit Conformance
+    runs-on: ubuntu-latest
     steps:
       - name: Check that PR title conforms to conventional commits
         if: github.event_name == 'pull_request'
@@ -35,7 +56,7 @@ jobs:
 
   detect-console-log:
     name: Console Log Detection
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository

@@ -29,7 +29,7 @@ export class EditDeploymentComponent {
     public apiService: ApiService,
     private router: Router,
     private _snackBar: MatSnackBar,
-    private deploymentService: DeploymentsService
+    private deploymentService: DeploymentsService,
   ) {}
 
   ngOnInit() {
@@ -77,7 +77,7 @@ export class EditDeploymentComponent {
         switchMap(() => this.deploymentService.currentEdit$),
         filter((editObject): editObject is string => !!editObject),
         switchMap((editObject) => this.apiService.getDeployment(editObject)),
-        takeUntil(this.ngUnsubscribe)
+        takeUntil(this.ngUnsubscribe),
       )
       .subscribe((response: any) => {
         this.editDeploymentForm.reset({}, { emitEvent: false });
