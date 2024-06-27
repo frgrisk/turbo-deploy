@@ -22,7 +22,7 @@ export class SnapshotConfirmationDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: { instanceElement: any },
     public apiService: ApiService,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
   ) {}
 
   onConfirm() {

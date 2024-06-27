@@ -51,7 +51,7 @@ export class DeploymentDashboardComponent {
     private router: Router,
     private _snackBar: MatSnackBar,
     private deploymentService: DeploymentsService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
   ) {}
   ngOnInit() {
     this.initializeDeployedInstances();
@@ -99,7 +99,7 @@ export class DeploymentDashboardComponent {
       .subscribe((response: DeploymentApiResponse[]) => {
         this.dataSource = response
           ? response.filter(
-              (instance) => instance.status !== EC2Status.TERMINATED
+              (instance) => instance.status !== EC2Status.TERMINATED,
             )
           : [];
       });
@@ -146,7 +146,7 @@ export class DeploymentDashboardComponent {
   pollInstanceStatus(
     instanceId: string,
     targetStatus: string,
-    pollTime: number
+    pollTime: number,
   ): void {
     let attempts = 0;
     const maxAttempts = 10;
@@ -163,7 +163,7 @@ export class DeploymentDashboardComponent {
         .subscribe(
           (deployments) => {
             const instance = deployments.find(
-              (d: { ec2InstanceId: string }) => d.ec2InstanceId === instanceId
+              (d: { ec2InstanceId: string }) => d.ec2InstanceId === instanceId,
             );
             if (
               !instance ||
@@ -181,7 +181,7 @@ export class DeploymentDashboardComponent {
           (error) => {
             this.stopPolling();
             console.error('Error polling instance status:', error);
-          }
+          },
         );
     };
 
