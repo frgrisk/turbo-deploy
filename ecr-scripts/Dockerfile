@@ -19,7 +19,7 @@ RUN yum install -y unzip \
     && rm /tmp/terraform.zip
 
 # Install Python and pip
-RUN yum install -y python3 python3-pip && yum clean all \
+RUN yum install -y python3 python3-pip gettext && yum clean all \
     && python3 -m pip install --upgrade pip
 
 WORKDIR /var/task

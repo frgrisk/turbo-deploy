@@ -17,7 +17,7 @@ provider "aws" {
   region = "${AWS_REGION_CUSTOM}"
 }
 
-variable "AWS_REGION_CUSTOM" {
+variable "aws_region" {
   description = "The AWS region to deploy resources into"
   type        = string
   default     = "${AWS_REGION_CUSTOM}"
