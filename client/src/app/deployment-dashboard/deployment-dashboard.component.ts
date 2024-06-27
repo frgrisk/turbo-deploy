@@ -7,6 +7,9 @@ import { Router } from '@angular/router';
 import { DeploymentsService } from '../shared/services/deployments.service';
 import { convertDateTime } from '../shared/util/time.util';
 import { Subject, take, takeUntil } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { DeploymentApiRequest } from '../shared/model/deployment-request';
+import { SnapshotConfirmationDialogComponent } from '../shared/components/snapshot-confirmation-dialog/snapshot-confirmation-dialog.component';
 
 @Component({
   selector: 'app-deployment-dashboard',
@@ -21,6 +24,7 @@ export class DeploymentDashboardComponent {
     'serverSize',
     'lifecycle',
     'timeToExpire',
+    'snapshotId',
     'status',
     'action',
   ];
@@ -37,6 +41,7 @@ export class DeploymentDashboardComponent {
     { key: 'serverSize', header: 'Server Size' },
     { key: 'availabilityZone', header: 'Availability Zone' },
     { key: 'lifecycle', header: 'Life Cycle' },
+    { key: 'snapshotId', header: 'Snapshot' },
     { key: 'status', header: 'Status' },
     { key: 'timeToExpire', header: 'Expiry' },
     { key: 'action', header: 'Action' },
@@ -46,6 +51,7 @@ export class DeploymentDashboardComponent {
     private router: Router,
     private _snackBar: MatSnackBar,
     private deploymentService: DeploymentsService,
+    public dialog: MatDialog,
   ) {}
   ngOnInit() {
     this.initializeDeployedInstances();
@@ -111,6 +117,14 @@ export class DeploymentDashboardComponent {
         this.deleteSnackbar();
         this.refresh();
       });
+  }
+
+  openSnapshotModal(instanceElement: any) {
+    const dialogRef = this.dialog.open(SnapshotConfirmationDialogComponent, {
+      width: '360px',
+      data: { instanceElement },
+    });
+    dialogRef.afterClosed().subscribe(() => this.refresh());
   }
 
   startInstance(element: any) {

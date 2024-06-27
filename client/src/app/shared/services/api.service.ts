@@ -91,4 +91,13 @@ export class ApiService {
       .post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null)
       .pipe(catchError(this.handleError.bind(this)));
   }
+
+  captureInstanceSnapshopt(payload: any): Observable<any> {
+    return this.http
+      .put(
+        `${environment.apiBaseUrl}/capture-instance-snapshot/${payload.id}`,
+        payload,
+      )
+      .pipe(catchError(this.handleError.bind(this)));
+  }
 }

@@ -65,6 +65,9 @@ func SetupRoutes(r *gin.Engine) {
 
 	// AWS Data requests
 	r.GET("/awsdata", GetAWSData)
+
+	// Capture instance Snapshot
+	r.PUT("/capture-instance-snapshot/:id", CaptureInstanceSnapshot)
 }
 
 func CreateInstanceRequest(c *gin.Context) {
@@ -249,14 +252,14 @@ func GetAWSData(c *gin.Context) {
 		return
 	}
 
-	instanceTypes, err := GetEC2InstanceTypes(c.Request.Context())
-	if err != nil {
-		log.Printf("Error fetching EC2 instance types: %v", err)
-		abortWithLog(c, http.StatusInternalServerError, err)
-		return
-	}
+	// instanceTypes, err := GetEC2InstanceTypes(c.Request.Context())
+	// if err != nil {
+	// 	log.Printf("Error fetching EC2 instance types: %v", err)
+	// 	abortWithLog(c, http.StatusInternalServerError, err)
+	// 	return
+	// }
 
-	config.ServerSizes = instanceTypes
+	// config.ServerSizes = instanceTypes
 
 	c.JSON(http.StatusOK, config)
 }
@@ -395,4 +398,46 @@ func PopulateSpotTagResponse(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func CaptureInstanceSnapshot(c *gin.Context) {
+	var req models.Payload
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		if err := c.AbortWithError(http.StatusInternalServerError, err); err != nil {
+			log.Printf("Failed to abort with error: %v", err)
+		}
+		return
+	}
+
+	id := c.Param(pathParameterName)
+	log.Println("update request for id:", id)
+
+	var snapshotID string
+	if snapshotID, err = instance.CaptureInstanceSnapshot(req.InstanceID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Convert request to DynamoDBData struct
+	data := models.DynamoDBData{
+		ID:                id,
+		Ami:               req.Ami,
+		ServerSize:        req.ServerSize,
+		Hostname:          req.Hostname,
+		Region:            req.Region,
+		CreationUser:      req.CreationUser,
+		Lifecycle:         req.Lifecycle,
+		SnapShot:          snapshotID,
+		ContentDeployment: req.ContentDeployment,
+	}
+
+	// Update the DynamoDB row to include the captured snapshot ID
+	if err := db.UpdateRecord(id, data); err != nil {
+		log.Printf("Failed to update snapshot ID: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update snapshot ID"})
+		return
+	}
+	c.Status(http.StatusOK)
 }

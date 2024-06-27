@@ -16,10 +16,14 @@ terraform {
 }
 
 provider "aws" {
-  region = "ap-southeast-3"
+  region = "ap-southeast-1"
 }
 
 module "my_turbo_module" {
-  source     = "../modules/turbo-deploy-module"
-  aws_region = "ap-southeast-3"
+  providers = {
+    aws = aws
+  }
+
+  source            = "../../terraform-aws-turbo-deploy"
+  s3_tf_bucket_name = "turbo-deploy-tzlfrglast"
 }

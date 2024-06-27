@@ -1,5 +1,5 @@
 # Dockerfile
-FROM public.ecr.aws/lambda/provided:al2
+FROM --platform=linux/x86_64 public.ecr.aws/lambda/provided:al2
 
 ARG ARCH=amd64
 ARG TERRAFORM_VERSION=1.7.4
@@ -19,7 +19,7 @@ RUN yum install -y unzip \
     && rm /tmp/terraform.zip
 
 # Install Python and pip
-RUN yum install -y python3 python3-pip && yum clean all \
+RUN yum install -y python3 python3-pip gettext && yum clean all \
     && python3 -m pip install --upgrade pip
 
 WORKDIR /var/task
