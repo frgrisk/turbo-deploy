@@ -1,0 +1,36 @@
+terraform {
+  backend "s3" {
+    bucket         = "${S3_BUCKET_NAME}"
+    key            = "terraform-backend/terraform.tfstate"
+    region         = "${AWS_REGION_CUSTOM}"
+    dynamodb_table = "${DYNAMODB_TABLE}"
+    encrypt        = true
+  }
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+
+provider "aws" {
+  region = "${AWS_REGION_CUSTOM}"
+}
+
+variable "AWS_REGION_CUSTOM" {
+  description = "The AWS region to deploy resources into"
+  type        = string
+  default     = "${AWS_REGION_CUSTOM}"
+}
+
+variable "security_group_id" {
+  description = "ID of the security group associated with EC2 deployment"
+  type        = string
+  default     = "${SECURITY_GROUP_ID}"
+}
+
+variable "public_subnet_id" {
+  description = "IDs of the public subnet associated with EC2 deployment"
+  type        = string
+  default     = "${PUBLIC_SUBNET_ID}"
+}

@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "tb-terraform-lambda-tf-state-v2"
+    bucket         = "turbo-deploy-tzlfrg"
     key            = "terraform-backend/terraform.tfstate"
-    region         = "ap-southeast-3"
-    dynamodb_table = "tb-terraform-lambda-tf-locks"
+    region         = "ap-southeast-1"
+    dynamodb_table = "terraform-lambda-deploy-locks"
     encrypt        = true
   }
   required_providers {
@@ -14,24 +14,24 @@ terraform {
 }
 
 provider "aws" {
-  region = "ap-southeast-3"
+  region = "ap-southeast-1"
 }
 
 variable "aws_region" {
   description = "The AWS region to deploy resources into"
   type        = string
-  default     = "ap-southeast-3"
+  default     = "ap-southeast-1"
 }
 
 variable "security_group_id" {
   description = "id of security group associated with ec2 deployment"
   type        = string
-  default     = "sg-038aa4879f4f5d0b3"
+  default     = ""
 }
 
 variable "public_subnet_id" {
   description = "ids of public subnet associated with ec2 deployment"
   type        = string
-  default     = "subnet-096228147e289acee"
+  default     = ""
 }
 
