@@ -1,0 +1,57 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-go-deps:
+        patterns:
+          - "*" # Matches all dependencies
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "monthly"
+    groups:
+      angular-deps:
+        patterns:
+          - "@angular*"
+        update-types:
+          - "minor"
+          - "patch"
+      ngrx-deps:
+        patterns:
+          - "@ngrx*"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint*"
+          - "typescript*"
+          - "eslint*"
+      ag-grid:
+        patterns:
+          - "ag-grid-*"
+      non-angular-deps:
+        patterns:
+          - "*" # Matches all dependencies
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "@angular*"
+          - "@ngrx*" # should be updated with ng update @ngrx/store@16 (see https://ngrx.io/guide/migration/v16)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      # Check for updates to GitHub Actions every month
+      interval: "monthly"

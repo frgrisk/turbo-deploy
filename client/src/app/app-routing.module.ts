@@ -7,12 +7,11 @@ import { EditDeploymentComponent } from './edit-deployment/edit-deployment.compo
 const routes: Routes = [
   { path: '', component: DeploymentDashboardComponent },
   { path: 'create', component: CreateDeploymentComponent },
-  { path: 'edit', component: EditDeploymentComponent}
+  { path: 'edit', component: EditDeploymentComponent },
 ];
-
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -26,7 +26,7 @@ export class CreateDeploymentComponent implements OnInit {
   constructor(
     public apiService: ApiService,
     private router: Router,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
   ) {}
 
   ngOnInit() {

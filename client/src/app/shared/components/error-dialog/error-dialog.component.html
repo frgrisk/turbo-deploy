@@ -1,14 +1,15 @@
 <h1 mat-dialog-title>Error</h1>
 <div mat-dialog-content>
-    <div style="display: flex; flex-direction: row; align-items: center; gap:24px;">
+  <div
+    style="display: flex; flex-direction: row; align-items: center; gap: 24px"
+  >
     <mat-icon color="warn" class="error-icon">error</mat-icon>
     <div>
-        <p style="font-weight: 500;">Status: {{ data.status }}</p>
-        <p>{{ data.message }}</p>
+      <p style="font-weight: 500">Status: {{ data.status }}</p>
+      <p>{{ data.message }}</p>
     </div>
-    </div>
-
+  </div>
 </div>
 <mat-dialog-actions align="end">
-    <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Close</button>
-  </mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Close</button>
+</mat-dialog-actions>

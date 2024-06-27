@@ -1,28 +1,27 @@
 .align-with-icon {
-    display: flex;
-    align-items: center; /* Vertically aligns the flex items */
-    gap: 8px; /* Optional: Adds some space between the icon and the text */
-  }
+  display: flex;
+  align-items: center; /* Vertically aligns the flex items */
+  gap: 8px; /* Optional: Adds some space between the icon and the text */
+}
 
-  .action-button {
-    transform: scale(0.9)
-  }
-  
-  .disabled-button {
-    color: grey;
-  }
+.action-button {
+  transform: scale(0.9);
+}
 
-  .start-button {
-    color:green;
-  }
+.disabled-button {
+  color: grey;
+}
 
-  .stop-button {
-    color: red;
-    
-  }
+.start-button {
+  color: green;
+}
+
+.stop-button {
+  color: red;
+}
 
 .spinner-container {
-  display:inline-flex;
-  width:48px;
-justify-content: center;
+  display: inline-flex;
+  width: 48px;
+  justify-content: center;
 }
