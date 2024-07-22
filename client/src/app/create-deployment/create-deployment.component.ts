@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../shared/services/api.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Lifecycle, Region, TimeUnit } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,7 +19,7 @@ export class CreateDeploymentComponent implements OnInit {
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: Region[] = [Region.AP_SOUTHEAST_3];
+  regions: string[] = [];
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
 
