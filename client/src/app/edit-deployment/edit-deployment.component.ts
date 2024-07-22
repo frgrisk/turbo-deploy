@@ -73,13 +73,15 @@ export class EditDeploymentComponent {
         tap((data) => {
           this.serverSizes = data.serverSizes;
           this.amis = data.amis;
+          this.regions = data.regions;
         }),
         switchMap(() => this.deploymentService.currentEdit$),
         filter((editObject): editObject is string => !!editObject),
         switchMap((editObject) => this.apiService.getDeployment(editObject)),
         takeUntil(this.ngUnsubscribe),
       )
-      .subscribe((response: any) => {
+      .subscribe((response: any) => { 
+        console.log(response)
         this.editDeploymentForm.reset({}, { emitEvent: false });
         this.editDeploymentForm.patchValue({
           id: response.ID,

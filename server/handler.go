@@ -238,16 +238,19 @@ func DeleteAllInstanceRequests(c *gin.Context) {
 func GetAWSData(c *gin.Context) {
 	// read env variable
 	configEnv := os.Getenv("MY_AMI_ATTR")
+	regionEnv := os.Getenv("MY_REGION")
 
 	config := models.Config{}
 
 	err := json.Unmarshal([]byte(configEnv), &config)
 
+	config.Region = []string{regionEnv}
+
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, config)
 }
 

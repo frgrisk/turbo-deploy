@@ -34,6 +34,7 @@ type Payload struct {
 type Config struct {
 	ServerSizes []string `json:"serverSizes"`
 	Ami         []string `json:"amis"`
+	Region		[]string `json:"regions"`
 }
 
 type DeploymentResponse struct {
