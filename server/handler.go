@@ -399,7 +399,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 	log.Println("update request for id:", id)
 
 	var snapshotID string
-	if snapshotID, err = instance.CaptureInstanceSnapshot(req.InstanceID); err != nil {
+	if snapshotID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

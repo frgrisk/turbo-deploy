@@ -149,28 +149,98 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 	return string(lifecycle)
 }
 
-func CaptureInstanceSnapshot(instanceID string) (string, error) {
-	describeInstanceInput := &ec2.DescribeInstancesInput{
-		InstanceIds: []string{instanceID},
+func CaptureInstanceImage(instanceID string) (string, error) {	
+	// get tags of the instance
+	describeInstanceTags := &ec2.DescribeTagsInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{instanceID},
+			},
+		},
 	}
-	instanceResult, err := ec2Client.DescribeInstances(context.Background(), describeInstanceInput)
+
+	tagsResult, err := ec2Client.DescribeTags(context.Background(), describeInstanceTags)
 	if err != nil {
-		log.Printf("failed to describe instance %s: %v", instanceID, err)
+		log.Printf("failed to describe tags for instance %s: %v", instanceID, err)
 		return "", err
 	}
 
-	// snapshot the first volume
-	volumeID := instanceResult.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId
-
-	snapshotInput := &ec2.CreateSnapshotInput{
-		VolumeId: volumeID,
+	instanceName := "None"
+	for _, tags := range tagsResult.Tags {
+		if *tags.Key == "Name" {
+			instanceName = *tags.Value
+		}
 	}
-	result, err := ec2Client.CreateSnapshot(context.Background(), snapshotInput)
+
+	// check if an image for that instance already exists
+	filter := []types.Filter{
+		{
+			Name:   aws.String("name"),
+			Values: []string{instanceName},
+		},
+		{
+			Name: aws.String("is-public"),
+			Values: []string{"false"},
+		},
+	}
+
+	imageResult, err := getImage(filter)
 	if err != nil {
-		log.Printf("failed to create snapshot for instance %s: %v", instanceID, err)
+		log.Printf("failed to resolve image for instance %s: %v", instanceID, err)
 		return "", err
 	}
 
-	log.Printf("Snapshot for instance %s created successfully: %s", instanceID, aws.ToString(result.SnapshotId))
-	return aws.ToString(result.SnapshotId), nil
+	// if it exists deregister it
+	if len(imageResult.Images) == 0 {
+		log.Printf("No images returned for deregistering")
+	} else {
+		describeDeregisterImage := &ec2.DeregisterImageInput{
+			ImageId: imageResult.Images[0].ImageId,
+		}
+		log.Printf("The id of the image is %s, deregistering...", *imageResult.Images[0].ImageId)
+		_, err := ec2Client.DeregisterImage(context.Background(), describeDeregisterImage)
+		if err != nil {
+			log.Printf("failed to deregister image for instance %s: %v", instanceID, err)
+			return "", err
+		}
+	}
+
+	// snapshot the instance
+	imageInput := &ec2.CreateImageInput{
+		InstanceId: aws.String(instanceID),
+		Name: aws.String(instanceName),
+		TagSpecifications: []types.TagSpecification{
+			{
+				ResourceType: types.ResourceType("image"),
+				Tags: []types.Tag{
+					{
+						Key: aws.String("DeployedBy"),
+						Value: aws.String("turbo-deploy"),
+					},
+				},
+			},
+		},
+	}
+	result, err := ec2Client.CreateImage(context.Background(), imageInput)
+	if err != nil {
+		log.Printf("failed to create image for instance %s: %v", instanceID, err)
+		return "", err
+	}
+
+	log.Printf("Image for instance %s created successfully: %s", instanceID, aws.ToString(result.ImageId))
+	return aws.ToString(result.ImageId), nil
+}
+
+func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
+	describeInstanceImage := &ec2.DescribeImagesInput{
+		Filters: filter,
+	}
+
+	imageResult, err := ec2Client.DescribeImages(context.Background(), describeInstanceImage)
+	if err != nil {
+		return nil,err
+	}
+
+	return imageResult, nil
 }
