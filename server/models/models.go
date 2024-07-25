@@ -29,12 +29,13 @@ type Payload struct {
 	ContentDeployment string `json:"contentDeployment"`
 	TTLUnit           string `json:"ttlUnit"`
 	TTLValue          int64  `json:"ttlValue"`
+	TimeToExpire      string `json:"timeToExpire"`
 }
 
 type Config struct {
 	ServerSizes []string `json:"serverSizes"`
 	Ami         []string `json:"amis"`
-	Region		[]string `json:"regions"`
+	Region      []string `json:"regions"`
 }
 
 type DeploymentResponse struct {

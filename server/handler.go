@@ -243,21 +243,15 @@ func GetAWSData(c *gin.Context) {
 	config := models.Config{}
 
 	err := json.Unmarshal([]byte(configEnv), &config)
-
-	config.Region = []string{regionEnv}
-
 	if err != nil {
-		log.Println(err)
+		log.Printf("Failed to describe unmarshal ec2 configuration: %v", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, config)
-}
+	// add region env
+	config.Region = []string{regionEnv}
 
-func abortWithLog(c *gin.Context, statusCode int, err error) {
-	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
-		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
-	}
+	c.JSON(http.StatusOK, config)
 }
 
 func GetEC2InstanceTypes(ctx context.Context) ([]string, error) {

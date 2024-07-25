@@ -80,8 +80,7 @@ export class EditDeploymentComponent {
         switchMap((editObject) => this.apiService.getDeployment(editObject)),
         takeUntil(this.ngUnsubscribe),
       )
-      .subscribe((response: any) => { 
-        console.log(response)
+      .subscribe((response: any) => {
         this.editDeploymentForm.reset({}, { emitEvent: false });
         this.editDeploymentForm.patchValue({
           id: response.ID,
