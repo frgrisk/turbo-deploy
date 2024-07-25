@@ -29,6 +29,7 @@ type Payload struct {
 	ContentDeployment string `json:"contentDeployment"`
 	TTLUnit           string `json:"ttlUnit"`
 	TTLValue          int64  `json:"ttlValue"`
+	TimeToExpire      string `json:"timeToExpire"`
 }
 
 type Config struct {

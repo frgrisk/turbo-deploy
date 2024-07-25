@@ -135,6 +135,8 @@ func UpdateRecord(id string, updateData models.DynamoDBData) error {
 		expression.Name("lifecycle"), expression.Value(updateData.Lifecycle),
 	).Set(
 		expression.Name("timeToExpire"), expression.Value(updateData.TimeToExpire),
+	).Set(
+		expression.Name("snapShot"), expression.Value(updateData.SnapShot),
 	)
 
 	// Build the update expression.

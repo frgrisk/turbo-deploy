@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -411,6 +412,11 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		return
 	}
 
+	timeToLive, err := strconv.ParseInt(req.TimeToExpire, 10, 64)
+	if err != nil {
+		log.Printf("Failed to parse ttl with error %v", err)
+	}
+
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                id,
@@ -422,6 +428,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          snapshotID,
 		ContentDeployment: req.ContentDeployment,
+		TimeToExpire:      timeToLive,
 	}
 
 	// Update the DynamoDB row to include the captured snapshot ID

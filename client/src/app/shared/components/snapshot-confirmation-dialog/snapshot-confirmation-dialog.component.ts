@@ -30,10 +30,11 @@ export class SnapshotConfirmationDialogComponent {
       id: this.data.instanceElement.deploymentId,
       instanceId: this.data.instanceElement.ec2InstanceId,
       hostname: this.data.instanceElement.hostname,
-      region: Region.AP_SOUTHEAST_3,
+      region: this.data.instanceElement.availabilityZone,
       ami: this.data.instanceElement.ami,
       serverSize: this.data.instanceElement.serverSize,
       lifecycle: this.data.instanceElement.lifecycle,
+      timeToExpire: this.data.instanceElement.timeToExpire,
     };
     this.apiService
       .captureInstanceSnapshopt(apiPayload)

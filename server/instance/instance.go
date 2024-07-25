@@ -47,47 +47,37 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 
 		for _, reservation := range output.Reservations {
 			for _, instance := range reservation.Instances {
-				// Retrieve volume IDs from the instance
-				var volumeIDs []string
-				for _, blockDevice := range instance.BlockDeviceMappings {
-					volumeIDs = append(volumeIDs, aws.ToString(blockDevice.Ebs.VolumeId))
+				// Get image based on the instance
+				filter := []types.Filter{
+					{
+						Name:   aws.String("source-instance-id"),
+						Values: []string{*instance.InstanceId},
+					},
+					{
+						Name: aws.String("is-public"),
+						Values: []string{"false"},
+					},
+				}
+			
+				imageResult, err := getImage(filter)
+				if err != nil {
+					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
+					return nil, err
 				}
 
-				// Check for snapshots and get the latest snapshot ID for the volumes
-				snapshotID := "None"
-				var latestSnapshot *types.Snapshot
-				for _, volumeID := range volumeIDs {
-					snapshotInput := &ec2.DescribeSnapshotsInput{
-						Filters: []types.Filter{
-							{
-								Name:   aws.String("volume-id"),
-								Values: []string{volumeID},
-							},
-						},
-					}
-					snapshots, err := ec2Client.DescribeSnapshots(context.Background(), snapshotInput)
-					if err != nil {
-						log.Printf("Error retrieving snapshots for volume %s: %v", volumeID, err)
-						continue
-					}
-					for i := range snapshots.Snapshots {
-						snapshot := snapshots.Snapshots[i]
-						if latestSnapshot == nil || snapshot.StartTime.After(*latestSnapshot.StartTime) {
-							latestSnapshot = &snapshots.Snapshots[i]
-						}
-					}
-
+				var imageID string
+				if len(imageResult.Images) == 0 {
+					imageID = "none"
+				} else {
+					imageID = *imageResult.Images[0].ImageId
 				}
 
-				if latestSnapshot != nil {
-					snapshotID = aws.ToString(latestSnapshot.SnapshotId)
-				}
 				deployment := models.DeploymentResponse{
 					InstanceID:       aws.ToString(instance.InstanceId),
 					DeploymentID:     getInstanceTagValue("DeploymentID", instance.Tags),
 					Hostname:         getInstanceTagValue("Name", instance.Tags),
 					TimeToExpire:     getInstanceTagValue("TimeToExpire", instance.Tags),
-					SnapshotID:       snapshotID,
+					SnapshotID:       imageID,
 					Ami:              aws.ToString(instance.ImageId),
 					ServerSize:       string(instance.InstanceType),
 					AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
