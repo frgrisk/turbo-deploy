@@ -35,3 +35,7 @@ variable "public_subnet_id" {
   default     = ""
 }
 
+data "aws_s3_object" "user_data" {
+  bucket = "turbo-deploy-luqman"
+  key    = "user-data-scripts/user-data.sh"
+}

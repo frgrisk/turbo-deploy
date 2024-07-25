@@ -34,3 +34,8 @@ variable "public_subnet_id" {
   type        = string
   default     = "${PUBLIC_SUBNET_ID}"
 }
+
+data "aws_s3_object" "user_data" {
+  bucket = "${S3_BUCKET_NAME}" 
+  key    = "user-data-scripts/user-data.sh"
+}
