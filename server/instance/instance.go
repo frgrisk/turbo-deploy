@@ -232,6 +232,38 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
+func GetAvailableAmis(amilist []string) ([]string, error) {
+	// check if an image for that instance already exists
+	filter := []types.Filter{
+		{
+			Name: aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("tag:DeployedBy"),
+			Values: []string{"turbo-deploy"},
+		},
+	}
+
+	imageResult, err := getImage(filter)
+	if err != nil {
+		log.Printf("failed to retrieve images: %v", err)
+	}
+
+	// if it exists grab it
+	if len(imageResult.Images) == 0 {
+		log.Printf("No images returned for extra listing")
+	} else {
+		for i := range imageResult.Images {
+			image := imageResult.Images[i]
+			log.Printf("Image %s found, appending to the list...", *image.ImageId)
+			amilist = append(amilist, *image.ImageId)
+		}
+	}
+
+	return amilist, nil
+}
+
 func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 	describeInstanceImage := &ec2.DescribeImagesInput{
 		Filters: filter,

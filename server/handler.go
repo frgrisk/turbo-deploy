@@ -251,6 +251,13 @@ func GetAWSData(c *gin.Context) {
 	// add region env
 	config.Region = []string{regionEnv}
 
+	// get list of snapshot AMIs, and add to the AMI available
+	config.Ami, err = instance.GetAvailableAmis(config.Ami)
+	if err != nil {
+		log.Printf("Failed to get list of AMIs: %v", err)
+		return
+	}
+
 	c.JSON(http.StatusOK, config)
 }
 
