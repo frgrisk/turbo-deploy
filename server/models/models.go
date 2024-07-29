@@ -28,8 +28,8 @@ type Payload struct {
 	SnapShot          string `json:"snapShot"`
 	ContentDeployment string `json:"contentDeployment"`
 	TTLUnit           string `json:"ttlUnit"`
-	TTLValue          int64  `json:"ttlValue"`
 	TimeToExpire      string `json:"timeToExpire"`
+	TTLValue          int64  `json:"ttlValue"`
 }
 
 type Config struct {

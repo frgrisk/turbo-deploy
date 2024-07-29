@@ -54,11 +54,11 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 						Values: []string{*instance.InstanceId},
 					},
 					{
-						Name: aws.String("is-public"),
+						Name:   aws.String("is-public"),
 						Values: []string{"false"},
 					},
 				}
-			
+
 				imageResult, err := getImage(filter)
 				if err != nil {
 					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
@@ -139,7 +139,7 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 	return string(lifecycle)
 }
 
-func CaptureInstanceImage(instanceID string) (string, error) {	
+func CaptureInstanceImage(instanceID string) (string, error) {
 	// get tags of the instance
 	describeInstanceTags := &ec2.DescribeTagsInput{
 		Filters: []types.Filter{
@@ -170,7 +170,7 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 			Values: []string{instanceName},
 		},
 		{
-			Name: aws.String("is-public"),
+			Name:   aws.String("is-public"),
 			Values: []string{"false"},
 		},
 	}
@@ -199,13 +199,13 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	// snapshot the instance
 	imageInput := &ec2.CreateImageInput{
 		InstanceId: aws.String(instanceID),
-		Name: aws.String(instanceName),
+		Name:       aws.String(instanceName),
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceType("image"),
 				Tags: []types.Tag{
 					{
-						Key: aws.String("DeployedBy"),
+						Key:   aws.String("DeployedBy"),
 						Value: aws.String("turbo-deploy"),
 					},
 				},
@@ -226,7 +226,7 @@ func GetAvailableAmis(amilist []string) ([]string, error) {
 	// check if an image for that instance already exists
 	filter := []types.Filter{
 		{
-			Name: aws.String("is-public"),
+			Name:   aws.String("is-public"),
 			Values: []string{"false"},
 		},
 		{
@@ -261,7 +261,7 @@ func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 
 	imageResult, err := ec2Client.DescribeImages(context.Background(), describeInstanceImage)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	return imageResult, nil
