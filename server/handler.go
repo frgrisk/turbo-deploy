@@ -249,7 +249,7 @@ func GetAWSData(c *gin.Context) {
 	}
 
 	// add region env
-	config.Region = []string{regionEnv}
+	config.Region = regionEnv
 
 	c.JSON(http.StatusOK, config)
 }

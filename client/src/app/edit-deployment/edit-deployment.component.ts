@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { Region, Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { ApiService } from '../shared/services/api.service';
 import { Subject, filter, switchMap, takeUntil, tap } from 'rxjs';
@@ -20,7 +20,7 @@ export class EditDeploymentComponent {
   editDeploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: Region[] = [Region.AP_SOUTHEAST_3];
+  region: string = "";
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
   currentExpiry: string = '';
@@ -73,7 +73,7 @@ export class EditDeploymentComponent {
         tap((data) => {
           this.serverSizes = data.serverSizes;
           this.amis = data.amis;
-          this.regions = data.regions;
+          this.region = data.regions;
         }),
         switchMap(() => this.deploymentService.currentEdit$),
         filter((editObject): editObject is string => !!editObject),

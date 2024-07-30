@@ -19,7 +19,7 @@ export class CreateDeploymentComponent implements OnInit {
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: string[] = [];
+  region: string = "";
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
 
@@ -66,11 +66,11 @@ export class CreateDeploymentComponent implements OnInit {
     this.apiService.getAWSData().subscribe((data) => {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
-      this.regions = data.regions;
+      this.region = data.regions;
 
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0]);
-      this.deploymentForm.get('region')?.patchValue(this.regions[0]);
+      this.deploymentForm.get('region')?.patchValue(this.region);
     });
   }
 
