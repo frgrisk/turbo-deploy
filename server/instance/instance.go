@@ -2,7 +2,9 @@ package instance
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -140,34 +142,11 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 }
 
 func CaptureInstanceImage(instanceID string) (string, error) {
-	// get tags of the instance
-	describeInstanceTags := &ec2.DescribeTagsInput{
-		Filters: []types.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []string{instanceID},
-			},
-		},
-	}
-
-	tagsResult, err := ec2Client.DescribeTags(context.Background(), describeInstanceTags)
-	if err != nil {
-		log.Printf("failed to describe tags for instance %s: %v", instanceID, err)
-		return "", err
-	}
-
-	instanceName := "None"
-	for _, tags := range tagsResult.Tags {
-		if *tags.Key == "Name" {
-			instanceName = *tags.Value
-		}
-	}
-
 	// check if an image for that instance already exists
 	filter := []types.Filter{
 		{
-			Name:   aws.String("name"),
-			Values: []string{instanceName},
+			Name:   aws.String("source-instance-id"),
+			Values: []string{instanceID},
 		},
 		{
 			Name:   aws.String("is-public"),
@@ -195,11 +174,40 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 			return "", err
 		}
 	}
+	
+	// get tags of the instance
+	describeInstanceTags := &ec2.DescribeTagsInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{instanceID},
+			},
+		},
+	}
+
+	tagsResult, err := ec2Client.DescribeTags(context.Background(), describeInstanceTags)
+	if err != nil {
+		log.Printf("failed to describe tags for instance %s: %v", instanceID, err)
+		return "", err
+	}
+
+	instanceName := "None"
+	for _, tags := range tagsResult.Tags {
+		if *tags.Key == "Name" {
+			instanceName = *tags.Value
+		}
+	}
+
+	// get current time
+	now := time.Now()
+	date := now.Format(time.DateOnly)
+	time := fmt.Sprintf("%d%d%d", now.Hour(), now.Minute(), now.Second())
+	formatted_name := instanceName + "_" + date + "_" + time
 
 	// snapshot the instance
 	imageInput := &ec2.CreateImageInput{
 		InstanceId: aws.String(instanceID),
-		Name:       aws.String(instanceName),
+		Name:       aws.String(formatted_name),
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceType("image"),
