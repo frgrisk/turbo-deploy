@@ -20,7 +20,7 @@ export class EditDeploymentComponent {
   editDeploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  region: string = "";
+  region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
   currentExpiry: string = '';
