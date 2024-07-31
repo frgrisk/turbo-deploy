@@ -15,8 +15,8 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   user_data              = data.aws_s3_object.user_data.body
   tags = {
-    Name         = "${each.value.hostname}.${data.aws_route53_zone.hosted_zone.name}"
-    Hostname     = each.value.hostname
+    Name         = each.value.hostname
+    Hostname     = replace(each.value.hostname, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire
     DeployedBy   = "turbo-deploy"
@@ -26,8 +26,8 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
 resource "aws_eip" "on_demand_ip" {
   for_each = aws_instance.my_deployed_on_demand_instances
   instance = each.value.id
-  tags     = {
-    Hostname = each.value.tags_all.Name
+  tags = {
+    Hostname = each.value.tags_all.Hostname
   }
 }
 
@@ -53,7 +53,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   user_data              = data.aws_s3_object.user_data.body
   tags = {
     Name         = "${each.value.hostname}.${data.aws_route53_zone.hosted_zone.name}"
-    Hostname     = each.value.hostname
+    Hostname     = replace(each.value.hostname, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire
     DeployedBy   = "turbo-deploy"
@@ -63,8 +63,8 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
 resource "aws_eip" "spot_ip" {
   for_each = aws_spot_instance_request.my_deployed_spot_instances
   instance = each.value.spot_instance_id
-  tags     = {
-    Hostname = each.value.tags_all.Name
+  tags = {
+    Hostname = each.value.tags_all.Hostname
   }
 }
 

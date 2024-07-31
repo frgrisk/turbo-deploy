@@ -81,12 +81,16 @@ func CreateInstanceRequest(c *gin.Context) {
 		return
 	}
 
+	// get hostname and concat with domain
+	domainEnv := os.Getenv("DOMAIN_NAME")
+	hostname := req.Hostname + "." + domainEnv
+
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                uuid.New().String()[:8],
 		Ami:               req.Ami,
 		ServerSize:        req.ServerSize,
-		Hostname:          req.Hostname,
+		Hostname:          hostname,
 		Region:            req.Region,
 		CreationUser:      req.CreationUser,
 		Lifecycle:         req.Lifecycle,
