@@ -174,7 +174,7 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 			return "", err
 		}
 	}
-	
+
 	// get tags of the instance
 	describeInstanceTags := &ec2.DescribeTagsInput{
 		Filters: []types.Filter{
@@ -202,12 +202,12 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	now := time.Now()
 	date := now.Format(time.DateOnly)
 	time := fmt.Sprintf("%d%d%d", now.Hour(), now.Minute(), now.Second())
-	formatted_name := instanceName + "_" + date + "_" + time
+	formattedName := instanceName + "_" + date + "_" + time
 
 	// snapshot the instance
 	imageInput := &ec2.CreateImageInput{
 		InstanceId: aws.String(instanceID),
-		Name:       aws.String(formatted_name),
+		Name:       aws.String(formattedName),
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceType("image"),
