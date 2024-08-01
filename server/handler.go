@@ -82,12 +82,16 @@ func CreateInstanceRequest(c *gin.Context) {
 		return
 	}
 
+	// get hostname and concat with domain
+	domainEnv := os.Getenv("DOMAIN_NAME")
+	hostname := req.Hostname + "." + domainEnv
+
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                uuid.New().String()[:8],
 		Ami:               req.Ami,
 		ServerSize:        req.ServerSize,
-		Hostname:          req.Hostname,
+		Hostname:          hostname,
 		Region:            req.Region,
 		CreationUser:      req.CreationUser,
 		Lifecycle:         req.Lifecycle,
@@ -250,7 +254,7 @@ func GetAWSData(c *gin.Context) {
 	}
 
 	// add region env
-	config.Region = []string{regionEnv}
+	config.Region = regionEnv
 
 	// get list of snapshot AMIs, and add to the AMI available
 	config.Ami, err = instance.GetAvailableAmis(config.Ami)

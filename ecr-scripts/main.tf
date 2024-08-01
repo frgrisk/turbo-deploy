@@ -35,3 +35,18 @@ variable "public_subnet_id" {
   default     = ""
 }
 
+variable "hosted_zone_id" {
+  description = "ID of the hosted zone for DNS"
+  type        = string
+  default     = ""
+}
+
+data "aws_route53_zone" "hosted_zone" {
+  zone_id      = ""
+  private_zone = false
+}
+
+data "aws_s3_object" "user_data" {
+  bucket = "turbo-deploy-luqman"
+  key    = "user-data-scripts/user-data.sh"
+}

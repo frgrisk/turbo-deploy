@@ -34,3 +34,19 @@ variable "public_subnet_id" {
   type        = string
   default     = "${PUBLIC_SUBNET_ID}"
 }
+
+variable "hosted_zone_id" {
+  description = "ID of the hosted zone for DNS"
+  type        = string
+  default     = "${HOSTED_ZONE_ID}"
+}
+
+data "aws_route53_zone" "hosted_zone" {
+  zone_id      = "${HOSTED_ZONE_ID}" 
+  private_zone = false
+}
+
+data "aws_s3_object" "user_data" {
+  bucket = "${S3_BUCKET_NAME}" 
+  key    = "user-data-scripts/user-data.sh"
+}

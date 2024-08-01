@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../shared/services/api.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Lifecycle, Region, TimeUnit } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,7 +19,7 @@ export class CreateDeploymentComponent implements OnInit {
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: string[] = [];
-  regions: Region[] = [Region.AP_SOUTHEAST_3];
+  region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
 
@@ -66,10 +66,11 @@ export class CreateDeploymentComponent implements OnInit {
     this.apiService.getAWSData().subscribe((data) => {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
+      this.region = data.regions;
 
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0]);
-      this.deploymentForm.get('region')?.patchValue(Region.AP_SOUTHEAST_3);
+      this.deploymentForm.get('region')?.patchValue(this.region);
     });
   }
 
