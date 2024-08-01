@@ -1,4 +1,4 @@
-import { Lifecycle, Region, TimeUnit } from '../enum/dropdown.enum';
+import { Lifecycle, TimeUnit } from '../enum/dropdown.enum';
 
 export class DeploymentApiRequest {
   id?: string;
@@ -6,7 +6,7 @@ export class DeploymentApiRequest {
   ami!: number;
   serverSize!: string;
   hostname!: string;
-  region!: Region;
+  region!: string;
   lifecycle!: Lifecycle;
   ttlValue?: number;
   ttlUnit?: string;
