@@ -174,3 +174,16 @@ func CaptureInstanceSnapshot(instanceID string) (string, error) {
 	log.Printf("Snapshot for instance %s created successfully: %s", instanceID, aws.ToString(result.SnapshotId))
 	return aws.ToString(result.SnapshotId), nil
 }
+
+func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
+	describeInstanceImage := &ec2.DescribeImagesInput{
+		Filters: filter,
+	}
+
+	imageResult, err := ec2Client.DescribeImages(context.Background(), describeInstanceImage)
+	if err != nil {
+		return nil, err
+	}
+
+	return imageResult, nil
+}
