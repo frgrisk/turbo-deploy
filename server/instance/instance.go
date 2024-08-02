@@ -174,3 +174,37 @@ func CaptureInstanceSnapshot(instanceID string) (string, error) {
 	log.Printf("Snapshot for instance %s created successfully: %s", instanceID, aws.ToString(result.SnapshotId))
 	return aws.ToString(result.SnapshotId), nil
 }
+
+func GetAMIName(ami map[string]string) map[string]string {
+	for k := range ami {
+		filter := []types.Filter{
+			{
+				Name:   aws.String("image-id"),
+				Values: []string{k},
+			},
+		}
+
+		imageResult, err := getImage(filter)
+		if err != nil {
+			log.Printf("failed to retrieve images: %v", err)
+		}
+
+		ami[k] = *imageResult.Images[0].Name
+
+	}
+
+	return ami
+}
+
+func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
+	describeInstanceImage := &ec2.DescribeImagesInput{
+		Filters: filter,
+	}
+
+	imageResult, err := ec2Client.DescribeImages(context.Background(), describeInstanceImage)
+	if err != nil {
+		return nil, err
+	}
+
+	return imageResult, nil
+}

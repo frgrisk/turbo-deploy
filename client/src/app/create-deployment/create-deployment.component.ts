@@ -18,7 +18,7 @@ export class CreateDeploymentComponent implements OnInit {
 
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
-  amis: string[] = [];
+  amis: Map<string, string> = new Map<string, string>();
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
@@ -69,7 +69,7 @@ export class CreateDeploymentComponent implements OnInit {
       this.region = data.regions;
 
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
-      this.deploymentForm.get('ami')?.patchValue(this.amis[0]);
+      this.deploymentForm.get('ami')?.patchValue(this.amis);
       this.deploymentForm.get('region')?.patchValue(this.region);
     });
   }
