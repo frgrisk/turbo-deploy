@@ -248,7 +248,8 @@ func GetAWSData(c *gin.Context) {
 
 	err := json.Unmarshal([]byte(configEnv), &tempConfig)
 	if err != nil {
-		log.Printf("Failed to describe unmarshal ec2 configuration: %v", err)
+		log.Printf("Error parsing environment variable: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -271,6 +272,12 @@ func GetAWSData(c *gin.Context) {
 
 	// Dont forget to change to config
 	c.JSON(http.StatusOK, config)
+}
+
+func abortWithLog(c *gin.Context, statusCode int, err error) {
+	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
+		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
+	}
 }
 
 func GetEC2InstanceTypes(ctx context.Context) ([]string, error) {
