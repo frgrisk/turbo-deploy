@@ -2,7 +2,7 @@ name: AWS Lambda Image Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   ECR_REPOSITORY_NAME: turbo-deploy-tf-function
@@ -43,7 +43,3 @@ jobs:
           docker build --build-arg AWS_DEFAULT_REGION=$AWS_REGION -t $ECR_REPOSITORY_NAME:latest .
           docker tag $ECR_REPOSITORY_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
-
-
-
-      
