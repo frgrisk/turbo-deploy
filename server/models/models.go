@@ -33,6 +33,12 @@ type Payload struct {
 }
 
 type Config struct {
+	Region      string            `json:"regions"`
+	ServerSizes []string          `json:"serverSizes"`
+	Ami         map[string]string `json:"amis"`
+}
+
+type TempConfig struct {
 	Region      string   `json:"regions"`
 	ServerSizes []string `json:"serverSizes"`
 	Ami         []string `json:"amis"`

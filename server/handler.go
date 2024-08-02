@@ -244,17 +244,32 @@ func GetAWSData(c *gin.Context) {
 	configEnv := os.Getenv("MY_AMI_ATTR")
 	regionEnv := os.Getenv("MY_REGION")
 
-	config := models.Config{}
+	tempConfig := models.TempConfig{}
 
-	err := json.Unmarshal([]byte(configEnv), &config)
+	err := json.Unmarshal([]byte(configEnv), &tempConfig)
 	if err != nil {
 		log.Printf("Failed to describe unmarshal ec2 configuration: %v", err)
 		return
 	}
 
 	// add region env
-	config.Region = regionEnv
+	tempConfig.Region = regionEnv
 
+	// get the names of the ami
+	m := make(map[string]string)
+	for _, v := range tempConfig.Ami {
+		m[v] = ""
+	}
+
+	m = instance.GetAMIName(m)
+
+	config := models.Config{}
+
+	config.Region = tempConfig.Region
+	config.ServerSizes = tempConfig.ServerSizes
+	config.Ami = m
+
+	// Dont forget to change to config
 	c.JSON(http.StatusOK, config)
 }
 
