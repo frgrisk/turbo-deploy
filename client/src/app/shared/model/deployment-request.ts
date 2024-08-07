@@ -10,4 +10,5 @@ export class DeploymentApiRequest {
   lifecycle!: Lifecycle;
   ttlValue?: number;
   ttlUnit?: string;
+  timeToExpire?: number;
 }

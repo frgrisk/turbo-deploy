@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -255,6 +256,13 @@ func GetAWSData(c *gin.Context) {
 	// add region env
 	config.Region = regionEnv
 
+	// get list of snapshot AMIs, and add to the AMI available
+	config.Ami, err = instance.GetAvailableAmis(config.Ami)
+	if err != nil {
+		log.Printf("Failed to get list of AMIs: %v", err)
+		return
+	}
+
 	c.JSON(http.StatusOK, config)
 }
 
@@ -403,9 +411,14 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 	log.Println("update request for id:", id)
 
 	var snapshotID string
-	if snapshotID, err = instance.CaptureInstanceSnapshot(req.InstanceID); err != nil {
+	if snapshotID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	timeToLive, err := strconv.ParseInt(req.TimeToExpire, 10, 64)
+	if err != nil {
+		log.Printf("Failed to parse ttl with error %v", err)
 	}
 
 	// Convert request to DynamoDBData struct
@@ -419,6 +432,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          snapshotID,
 		ContentDeployment: req.ContentDeployment,
+		TimeToExpire:      timeToLive,
 	}
 
 	// Update the DynamoDB row to include the captured snapshot ID
