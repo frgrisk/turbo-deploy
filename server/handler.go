@@ -40,13 +40,9 @@ func init() {
 	portEnv := os.Getenv("WEBSERVER_PORT")
 	fullName := fmt.Sprintf("http://%s.%s:%s", hostEnv, domainEnv, portEnv)
 
-	// allow all
-	// config := cors.DefaultConfig()
-	// config.AllowAllOrigins = true
-	
 	// allow one
 	config := cors.DefaultConfig()
-  	config.AllowOrigins = []string{fullName}
+	config.AllowOrigins = []string{fullName}
 	r.Use(cors.New(config))
 
 	SetupRoutes(r)
