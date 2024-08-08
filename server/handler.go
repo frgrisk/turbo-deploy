@@ -34,15 +34,16 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 	r = gin.Default()
 
-	// construct fqdn for cors
+	// construct hostname for cors
 	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
 	hostEnv := os.Getenv("WEBSERVER_HOSTNAME")
-	portEnv := os.Getenv("WEBSERVER_PORT")
-	fullName := fmt.Sprintf("http://%s.%s:%s", hostEnv, domainEnv, portEnv)
+	httpPortEnv := os.Getenv("WEBSERVER_HTTP_PORT")
+	httpsPortEnv := os.Getenv("WEBSERVER_HTTPS_PORT")
+	fullName := fmt.Sprintf("%s.%s", hostEnv, domainEnv)
 
-	// allow one
+	// setup allowed origins
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{fullName}
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv),fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
 	r.Use(cors.New(config))
 
 	SetupRoutes(r)
