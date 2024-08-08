@@ -43,7 +43,7 @@ func init() {
 
 	// setup allowed origins
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv),fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
 	r.Use(cors.New(config))
 
 	SetupRoutes(r)
