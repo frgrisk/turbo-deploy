@@ -20,6 +20,7 @@ import (
 	"github.com/frgrisk/turbo-deploy/server/instance"
 	"github.com/frgrisk/turbo-deploy/server/models"
 	"github.com/frgrisk/turbo-deploy/server/util"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -32,6 +33,19 @@ var (
 func init() {
 	gin.SetMode(gin.ReleaseMode)
 	r = gin.Default()
+
+	// construct hostname for cors
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
+	hostEnv := os.Getenv("WEBSERVER_HOSTNAME")
+	httpPortEnv := os.Getenv("WEBSERVER_HTTP_PORT")
+	httpsPortEnv := os.Getenv("WEBSERVER_HTTPS_PORT")
+	fullName := fmt.Sprintf("%s.%s", hostEnv, domainEnv)
+
+	// setup allowed origins
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
+	r.Use(cors.New(config))
+
 	SetupRoutes(r)
 	ginLambda = ginadapter.New(r)
 }
@@ -83,7 +97,7 @@ func CreateInstanceRequest(c *gin.Context) {
 	}
 
 	// get hostname and concat with domain
-	domainEnv := os.Getenv("DOMAIN_NAME")
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
 	hostname := req.Hostname + "." + domainEnv
 
 	// Convert request to DynamoDBData struct
