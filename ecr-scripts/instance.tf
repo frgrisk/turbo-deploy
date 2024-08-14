@@ -14,6 +14,7 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   user_data              = data.aws_s3_object.user_data.body
+  key_name               = data.aws_key_pair.admin_key.key_name
   tags = {
     Name         = each.value.hostname
     Hostname     = replace(each.value.hostname, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
@@ -51,6 +52,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   user_data              = data.aws_s3_object.user_data.body
+  key_name               = data.aws_key_pair.admin_key.key_name
   tags = {
     Name         = each.value.hostname
     Hostname     = replace(each.value.hostname, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
