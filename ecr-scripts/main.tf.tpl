@@ -55,3 +55,7 @@ data "aws_key_pair" "admin_key" {
   key_name           = "${PUBLIC_KEY}"
   include_public_key = true
 }
+
+data "aws_iam_role" "instance_role" {
+  name = "${ROLE_NAME}"
+}
