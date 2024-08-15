@@ -56,6 +56,6 @@ data "aws_key_pair" "admin_key" {
   include_public_key = true
 }
 
-data "aws_iam_role" "instance_role" {
-  name = "${ROLE_NAME}"
+data "aws_iam_instance_profile" "instance_profile" {
+  name = "${PROFILE_NAME}"
 }
