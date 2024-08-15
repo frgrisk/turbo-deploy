@@ -13,7 +13,7 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   instance_type          = each.value.serverSize
   subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
-  user_data              = data.aws_s3_object.user_data.body
+  user_data              = templatefile(data.aws_s3_object.user_data.body, { hostname = each.value.hostname })
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
@@ -50,7 +50,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   instance_type          = each.value.serverSize
   subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
-  user_data              = data.aws_s3_object.user_data.body
+  user_data              = templatefile(data.aws_s3_object.user_data.body, { hostname = each.value.hostname })
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
