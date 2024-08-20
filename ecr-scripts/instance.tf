@@ -23,20 +23,12 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   }
 }
 
-resource "aws_eip" "on_demand_ip" {
-  for_each = aws_instance.my_deployed_on_demand_instances
-  instance = each.value.id
-  tags = {
-    Hostname = each.value.tags_all.Hostname
-  }
-}
-
 resource "aws_route53_record" "on_demand_record" {
-  for_each = aws_eip.on_demand_ip
+  for_each = aws_instance.my_deployed_on_demand_instances
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = each.value.tags_all.Hostname
-  records  = [each.value.public_ip]
+  records  = [each.value.private_ip]
   ttl      = "60"
 }
 
@@ -60,19 +52,11 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   }
 }
 
-resource "aws_eip" "spot_ip" {
-  for_each = aws_spot_instance_request.my_deployed_spot_instances
-  instance = each.value.spot_instance_id
-  tags = {
-    Hostname = each.value.tags_all.Hostname
-  }
-}
-
 resource "aws_route53_record" "spot_record" {
-  for_each = aws_eip.spot_ip
+  for_each = aws_spot_instance_request.my_deployed_spot_instances
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = each.value.tags_all.Hostname
-  records  = [each.value.public_ip]
+  records  = [each.value.private_ip]
   ttl      = "60"
 }
