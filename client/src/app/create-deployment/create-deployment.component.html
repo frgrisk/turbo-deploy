@@ -43,7 +43,7 @@
                   <mat-option
                     *ngFor="let ami of amis | keyvalue"
                     [value]="ami.key"
-                    >{{ ami.value }}</mat-option
+                    >({{ ami.key }}) {{ami.value}}</mat-option
                   >
                 </mat-select>
               </mat-form-field>
