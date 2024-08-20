@@ -82,7 +82,7 @@ func CreateInstanceRequest(c *gin.Context) {
 	}
 
 	// get hostname and concat with domain
-	domainEnv := os.Getenv("DOMAIN_NAME")
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
 	hostname := req.Hostname + "." + domainEnv
 
 	// Convert request to DynamoDBData struct
