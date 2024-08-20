@@ -52,7 +52,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   user_data              = data.aws_s3_object.user_data.body
   tags = {
-    Name         = "${each.value.hostname}.${data.aws_route53_zone.hosted_zone.name}"
+    Name         = each.value.hostname
     Hostname     = replace(each.value.hostname, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire

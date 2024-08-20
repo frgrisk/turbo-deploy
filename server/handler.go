@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +20,7 @@ import (
 	"github.com/frgrisk/turbo-deploy/server/instance"
 	"github.com/frgrisk/turbo-deploy/server/models"
 	"github.com/frgrisk/turbo-deploy/server/util"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -31,6 +33,19 @@ var (
 func init() {
 	gin.SetMode(gin.ReleaseMode)
 	r = gin.Default()
+
+	// construct hostname for cors
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
+	hostEnv := os.Getenv("WEBSERVER_HOSTNAME")
+	httpPortEnv := os.Getenv("WEBSERVER_HTTP_PORT")
+	httpsPortEnv := os.Getenv("WEBSERVER_HTTPS_PORT")
+	fullName := fmt.Sprintf("%s.%s", hostEnv, domainEnv)
+
+	// setup allowed origins
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
+	r.Use(cors.New(config))
+
 	SetupRoutes(r)
 	ginLambda = ginadapter.New(r)
 }
@@ -256,6 +271,13 @@ func GetAWSData(c *gin.Context) {
 	// add region env
 	tempConfig.Region = regionEnv
 
+	// get list of snapshot AMIs, and add to the AMI available
+	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami)
+	if err != nil {
+		log.Printf("Failed to get list of AMIs: %v", err)
+		return
+	}
+
 	// get the names of the ami
 	m := make(map[string]string)
 	for _, v := range tempConfig.Ami {
@@ -270,7 +292,6 @@ func GetAWSData(c *gin.Context) {
 	config.ServerSizes = tempConfig.ServerSizes
 	config.Ami = m
 
-	// Dont forget to change to config
 	c.JSON(http.StatusOK, config)
 }
 
@@ -425,9 +446,14 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 	log.Println("update request for id:", id)
 
 	var snapshotID string
-	if snapshotID, err = instance.CaptureInstanceSnapshot(req.InstanceID); err != nil {
+	if snapshotID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	timeToLive, err := strconv.ParseInt(req.TimeToExpire, 10, 64)
+	if err != nil {
+		log.Printf("Failed to parse ttl with error %v", err)
 	}
 
 	// Convert request to DynamoDBData struct
@@ -441,6 +467,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          snapshotID,
 		ContentDeployment: req.ContentDeployment,
+		TimeToExpire:      timeToLive,
 	}
 
 	// Update the DynamoDB row to include the captured snapshot ID

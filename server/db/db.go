@@ -122,6 +122,7 @@ func UpdateRecord(id string, updateData models.DynamoDBData) error {
 		return ErrHostnameExists
 	}
 
+	// there was a field for region, removed for now as region is static
 	update := expression.Set(
 		expression.Name("ami"), expression.Value(updateData.Ami),
 	).Set(
@@ -129,13 +130,13 @@ func UpdateRecord(id string, updateData models.DynamoDBData) error {
 	).Set(
 		expression.Name("hostname"), expression.Value(updateData.Hostname),
 	).Set(
-		expression.Name("region"), expression.Value(updateData.Region),
-	).Set(
 		expression.Name("creationUser"), expression.Value(updateData.CreationUser),
 	).Set(
 		expression.Name("lifecycle"), expression.Value(updateData.Lifecycle),
 	).Set(
 		expression.Name("timeToExpire"), expression.Value(updateData.TimeToExpire),
+	).Set(
+		expression.Name("snapShot"), expression.Value(updateData.SnapShot),
 	)
 
 	// Build the update expression.

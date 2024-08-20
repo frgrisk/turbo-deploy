@@ -2,7 +2,9 @@ package instance
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -47,47 +49,37 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 
 		for _, reservation := range output.Reservations {
 			for _, instance := range reservation.Instances {
-				// Retrieve volume IDs from the instance
-				var volumeIDs []string
-				for _, blockDevice := range instance.BlockDeviceMappings {
-					volumeIDs = append(volumeIDs, aws.ToString(blockDevice.Ebs.VolumeId))
+				// Get image based on the instance
+				filter := []types.Filter{
+					{
+						Name:   aws.String("source-instance-id"),
+						Values: []string{*instance.InstanceId},
+					},
+					{
+						Name:   aws.String("is-public"),
+						Values: []string{"false"},
+					},
 				}
 
-				// Check for snapshots and get the latest snapshot ID for the volumes
-				snapshotID := "None"
-				var latestSnapshot *types.Snapshot
-				for _, volumeID := range volumeIDs {
-					snapshotInput := &ec2.DescribeSnapshotsInput{
-						Filters: []types.Filter{
-							{
-								Name:   aws.String("volume-id"),
-								Values: []string{volumeID},
-							},
-						},
-					}
-					snapshots, err := ec2Client.DescribeSnapshots(context.Background(), snapshotInput)
-					if err != nil {
-						log.Printf("Error retrieving snapshots for volume %s: %v", volumeID, err)
-						continue
-					}
-					for i := range snapshots.Snapshots {
-						snapshot := snapshots.Snapshots[i]
-						if latestSnapshot == nil || snapshot.StartTime.After(*latestSnapshot.StartTime) {
-							latestSnapshot = &snapshots.Snapshots[i]
-						}
-					}
-
+				imageResult, err := getImage(filter)
+				if err != nil {
+					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
+					return nil, err
 				}
 
-				if latestSnapshot != nil {
-					snapshotID = aws.ToString(latestSnapshot.SnapshotId)
+				var imageID string
+				if len(imageResult.Images) == 0 {
+					imageID = "none"
+				} else {
+					imageID = *imageResult.Images[0].ImageId
 				}
+
 				deployment := models.DeploymentResponse{
 					InstanceID:       aws.ToString(instance.InstanceId),
 					DeploymentID:     getInstanceTagValue("DeploymentID", instance.Tags),
 					Hostname:         getInstanceTagValue("Name", instance.Tags),
 					TimeToExpire:     getInstanceTagValue("TimeToExpire", instance.Tags),
-					SnapshotID:       snapshotID,
+					SnapshotID:       imageID,
 					Ami:              aws.ToString(instance.ImageId),
 					ServerSize:       string(instance.InstanceType),
 					AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
@@ -149,30 +141,125 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 	return string(lifecycle)
 }
 
-func CaptureInstanceSnapshot(instanceID string) (string, error) {
-	describeInstanceInput := &ec2.DescribeInstancesInput{
-		InstanceIds: []string{instanceID},
+func CaptureInstanceImage(instanceID string) (string, error) {
+	// check if an image for that instance already exists
+	filter := []types.Filter{
+		{
+			Name:   aws.String("source-instance-id"),
+			Values: []string{instanceID},
+		},
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
 	}
-	instanceResult, err := ec2Client.DescribeInstances(context.Background(), describeInstanceInput)
+
+	imageResult, err := getImage(filter)
 	if err != nil {
-		log.Printf("failed to describe instance %s: %v", instanceID, err)
+		log.Printf("failed to resolve image for instance %s: %v", instanceID, err)
 		return "", err
 	}
 
-	// snapshot the first volume
-	volumeID := instanceResult.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId
-
-	snapshotInput := &ec2.CreateSnapshotInput{
-		VolumeId: volumeID,
+	// if it exists deregister it
+	if len(imageResult.Images) == 0 {
+		log.Printf("No images returned for deregistering")
+	} else {
+		describeDeregisterImage := &ec2.DeregisterImageInput{
+			ImageId: imageResult.Images[0].ImageId,
+		}
+		log.Printf("The id of the image is %s, deregistering...", *imageResult.Images[0].ImageId)
+		_, err := ec2Client.DeregisterImage(context.Background(), describeDeregisterImage)
+		if err != nil {
+			log.Printf("failed to deregister image for instance %s: %v", instanceID, err)
+			return "", err
+		}
 	}
-	result, err := ec2Client.CreateSnapshot(context.Background(), snapshotInput)
+
+	// get tags of the instance
+	describeInstanceTags := &ec2.DescribeTagsInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{instanceID},
+			},
+		},
+	}
+
+	tagsResult, err := ec2Client.DescribeTags(context.Background(), describeInstanceTags)
 	if err != nil {
-		log.Printf("failed to create snapshot for instance %s: %v", instanceID, err)
+		log.Printf("failed to describe tags for instance %s: %v", instanceID, err)
 		return "", err
 	}
 
-	log.Printf("Snapshot for instance %s created successfully: %s", instanceID, aws.ToString(result.SnapshotId))
-	return aws.ToString(result.SnapshotId), nil
+	instanceName := "None"
+	for _, tags := range tagsResult.Tags {
+		if *tags.Key == "Name" {
+			instanceName = *tags.Value
+		}
+	}
+
+	// get current time
+	now := time.Now()
+	date := now.Format(time.DateOnly)
+	time := fmt.Sprintf("%d%d%d", now.Hour(), now.Minute(), now.Second())
+	formattedName := instanceName + "_" + date + "_" + time
+
+	// snapshot the instance
+	imageInput := &ec2.CreateImageInput{
+		InstanceId: aws.String(instanceID),
+		Name:       aws.String(formattedName),
+		TagSpecifications: []types.TagSpecification{
+			{
+				ResourceType: types.ResourceType("image"),
+				Tags: []types.Tag{
+					{
+						Key:   aws.String("DeployedBy"),
+						Value: aws.String("turbo-deploy"),
+					},
+				},
+			},
+		},
+	}
+	result, err := ec2Client.CreateImage(context.Background(), imageInput)
+	if err != nil {
+		log.Printf("failed to create image for instance %s: %v", instanceID, err)
+		return "", err
+	}
+
+	log.Printf("Image for instance %s created successfully: %s", instanceID, aws.ToString(result.ImageId))
+	return aws.ToString(result.ImageId), nil
+}
+
+func GetAvailableAmis(amilist []string) ([]string, error) {
+	// check if an image for that instance already exists
+	filter := []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("tag:DeployedBy"),
+			Values: []string{"turbo-deploy"},
+		},
+	}
+
+	imageResult, err := getImage(filter)
+	if err != nil {
+		log.Printf("failed to retrieve images: %v", err)
+	}
+
+	// if it exists grab it
+	if len(imageResult.Images) == 0 {
+		log.Printf("No images returned for extra listing")
+	} else {
+		for i := range imageResult.Images {
+			image := imageResult.Images[i]
+			log.Printf("Image %s found, appending to the list...", *image.ImageId)
+			amilist = append(amilist, *image.ImageId)
+		}
+	}
+
+	return amilist, nil
 }
 
 func GetAMIName(ami map[string]string) map[string]string {
