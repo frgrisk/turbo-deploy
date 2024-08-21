@@ -287,7 +287,7 @@ func GetAWSData(c *gin.Context) {
 	vorFilter := []types.Filter{
 		{
 			Name:   aws.String("is-public"),
-			Values: []string{"true"},
+			Values: []string{"false"},
 		},
 		{
 			Name:   aws.String("name"),
