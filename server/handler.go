@@ -261,17 +261,47 @@ func GetAWSData(c *gin.Context) {
 
 	config := models.Config{}
 
+	// add region env
+	config.Region = regionEnv
+
+	// get list of AMIs from the env
 	err := json.Unmarshal([]byte(configEnv), &config)
 	if err != nil {
 		log.Printf("Failed to describe unmarshal ec2 configuration: %v", err)
 		return
 	}
 
-	// add region env
-	config.Region = regionEnv
+	// get list of snapshot AMIs(AMI created by user)
+	snapshotFilter := []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("tag:DeployedBy"),
+			Values: []string{"turbo-deploy"},
+		},
+	}
 
-	// get list of snapshot AMIs, and add to the AMI available
-	config.Ami, err = instance.GetAvailableAmis(config.Ami)
+	// get latest VOR AMI
+	vorFilter := []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"true"},
+		},
+		{
+			Name:   aws.String("name"),
+			Values: []string{"VOR Stream*"},
+		},
+	}
+
+	filterGroup := [][]types.Filter {
+		snapshotFilter,
+		vorFilter,
+	}
+
+	// add the amis retrieved based on filters given
+	config.Ami, err = instance.GetAvailableAmis(config.Ami, filterGroup)
 	if err != nil {
 		log.Printf("Failed to get list of AMIs: %v", err)
 		return
