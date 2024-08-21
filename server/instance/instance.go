@@ -247,7 +247,7 @@ func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string,
 				log.Printf("Image %s found, appending to the list...", *image.ImageId)
 				amilist = append(amilist, *image.ImageId)
 			}
-		}	
+		}
 	}
 
 	return amilist, nil

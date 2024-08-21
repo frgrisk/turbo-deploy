@@ -295,7 +295,7 @@ func GetAWSData(c *gin.Context) {
 		},
 	}
 
-	filterGroup := [][]types.Filter {
+	filterGroup := [][]types.Filter{
 		snapshotFilter,
 		vorFilter,
 	}
