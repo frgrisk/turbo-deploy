@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -242,6 +243,11 @@ func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string,
 		if len(imageResult.Images) == 0 {
 			log.Printf("No images returned for extra listing")
 		} else {
+			sort.Slice(imageResult.Images, func(i, j int) bool {
+				timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
+				timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
+				return timeI.After(timeJ) // For descending order (newest first)
+			})
 			for i := range imageResult.Images {
 				image := imageResult.Images[i]
 				log.Printf("Image %s found, appending to the list...", *image.ImageId)
