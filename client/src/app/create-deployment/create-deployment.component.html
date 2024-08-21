@@ -40,9 +40,11 @@
               <mat-form-field floatLabel="always" appearance="outline">
                 <mat-label>AMI Choice</mat-label>
                 <mat-select formControlName="ami">
-                  <mat-option *ngFor="let ami of amis" [value]="ami">{{
-                    ami
-                  }}</mat-option>
+                  <mat-option
+                    *ngFor="let ami of amis | keyvalue"
+                    [value]="ami.key"
+                    >({{ ami.key }}) {{ ami.value }}</mat-option
+                  >
                 </mat-select>
               </mat-form-field>
               <mat-form-field floatLabel="always" appearance="outline">
