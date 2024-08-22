@@ -259,25 +259,46 @@ func GetAWSData(c *gin.Context) {
 	configEnv := os.Getenv("MY_AMI_ATTR")
 	regionEnv := os.Getenv("MY_REGION")
 
-	config := models.Config{}
+	tempConfig := models.TempConfig{}
 
-	err := json.Unmarshal([]byte(configEnv), &config)
+	err := json.Unmarshal([]byte(configEnv), &tempConfig)
 	if err != nil {
-		log.Printf("Failed to describe unmarshal ec2 configuration: %v", err)
+		log.Printf("Error parsing environment variable: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	// add region env
-	config.Region = regionEnv
+	tempConfig.Region = regionEnv
 
 	// get list of snapshot AMIs, and add to the AMI available
-	config.Ami, err = instance.GetAvailableAmis(config.Ami)
+	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami)
 	if err != nil {
 		log.Printf("Failed to get list of AMIs: %v", err)
 		return
 	}
 
+	// get the names of the ami
+	m := make(map[string]string)
+	for _, v := range tempConfig.Ami {
+		m[v] = ""
+	}
+
+	m = instance.GetAMIName(m)
+
+	config := models.Config{}
+
+	config.Region = tempConfig.Region
+	config.ServerSizes = tempConfig.ServerSizes
+	config.Ami = m
+
 	c.JSON(http.StatusOK, config)
+}
+
+func abortWithLog(c *gin.Context, statusCode int, err error) {
+	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
+		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
+	}
 }
 
 func GetEC2InstanceTypes(ctx context.Context) ([]string, error) {
