@@ -12,3 +12,8 @@ export const enum TimeUnit {
   DAYS = 'day',
   MONTHS = 'month',
 }
+
+export interface AmiAttr {
+  amiIds: string
+  amiNames: string
+}

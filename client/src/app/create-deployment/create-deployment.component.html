@@ -41,9 +41,8 @@
                 <mat-label>AMI Choice</mat-label>
                 <mat-select formControlName="ami">
                   <mat-option
-                    *ngFor="let ami of amis | keyvalue"
-                    [value]="ami.key"
-                    >({{ ami.key }}) {{ ami.value }}</mat-option
+                    *ngFor="let ami of amis" [value]="ami.amiIds"
+                    >({{ ami.amiIds }}) {{ ami.amiNames }}</mat-option
                   >
                 </mat-select>
               </mat-form-field>
