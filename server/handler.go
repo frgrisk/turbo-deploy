@@ -272,6 +272,16 @@ func GetAWSData(c *gin.Context) {
 		return
 	}
 
+	// Remove empty strings from the Ami config
+	i := 0
+	for _, ami := range tempConfig.Ami {
+		if ami != "" {
+			tempConfig.Ami[i] = ami
+			i++
+		}
+	}
+	tempConfig.Ami = tempConfig.Ami[:i]
+
 	// get list of snapshot AMIs(AMI created by user)
 	snapshotFilter := []types.Filter{
 		{
