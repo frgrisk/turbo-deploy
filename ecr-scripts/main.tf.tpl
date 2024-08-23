@@ -50,3 +50,8 @@ data "aws_s3_object" "user_data" {
   bucket = "${S3_BUCKET_NAME}" 
   key    = "user-data-scripts/user-data.sh"
 }
+
+data "aws_key_pair" "admin_key" {
+  key_name           = "${PUBLIC_KEY}"
+  include_public_key = true
+}
