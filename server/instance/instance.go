@@ -232,7 +232,6 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 }
 
 func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string, error) {
-	// check if an image for that instance already exists
 	for _, filter := range filterGroup {
 		imageResult, err := getImage(filter)
 		if err != nil {
@@ -243,6 +242,7 @@ func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string,
 		if len(imageResult.Images) == 0 {
 			log.Printf("No images returned for extra listing")
 		} else {
+			// sort the images found by creation date
 			sort.Slice(imageResult.Images, func(i, j int) bool {
 				timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
 				timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
@@ -259,12 +259,12 @@ func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string,
 	return amilist, nil
 }
 
-func GetAMIName(ami map[string]string) map[string]string {
-	for k := range ami {
+func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
+	for i := range ami {
 		filter := []types.Filter{
 			{
 				Name:   aws.String("image-id"),
-				Values: []string{k},
+				Values: []string{ami[i].AmiID},
 			},
 		}
 
@@ -272,9 +272,8 @@ func GetAMIName(ami map[string]string) map[string]string {
 		if err != nil {
 			log.Printf("failed to retrieve images: %v", err)
 		}
-
-		ami[k] = *imageResult.Images[0].Name
-
+		
+		ami[i].AmiName = *imageResult.Images[0].Name
 	}
 
 	return ami

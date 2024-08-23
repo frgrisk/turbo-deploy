@@ -43,7 +43,7 @@ func init() {
 
 	// setup allowed origins
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv), fmt.Sprintf("https://%s", fullName), fmt.Sprintf("https://%s", fullName)}
 	r.Use(cors.New(config))
 
 	SetupRoutes(r)
@@ -309,9 +309,13 @@ func GetAWSData(c *gin.Context) {
 	}
 
 	// get the names of the ami
-	m := make(map[string]string)
-	for _, v := range tempConfig.Ami {
-		m[v] = ""
+	m := []models.AmiAttr{}
+	for _, id := range tempConfig.Ami {
+		ami := models.AmiAttr{
+			AmiID:	id,
+			AmiName: "",
+		} 
+		m = append(m, ami)
 	}
 
 	m = instance.GetAMIName(m)

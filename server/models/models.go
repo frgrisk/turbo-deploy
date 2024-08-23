@@ -33,15 +33,20 @@ type Payload struct {
 }
 
 type Config struct {
-	Ami         map[string]string `json:"amis"`
-	Region      string            `json:"regions"`
-	ServerSizes []string          `json:"serverSizes"`
+	Ami         []AmiAttr `json:"amis"`
+	Region      string    `json:"regions"`
+	ServerSizes []string  `json:"serverSizes"`
 }
 
 type TempConfig struct {
 	Region      string   `json:"regions"`
 	ServerSizes []string `json:"serverSizes"`
 	Ami         []string `json:"amis"`
+}
+
+type AmiAttr struct {
+	AmiID   string `json:"amiIds"`
+	AmiName string `json:"amiNames"`
 }
 
 type DeploymentResponse struct {
