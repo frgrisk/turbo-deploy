@@ -40,8 +40,7 @@
               <mat-form-field floatLabel="always" appearance="outline">
                 <mat-label>AMI Choice</mat-label>
                 <mat-select formControlName="ami">
-                  <mat-option
-                    *ngFor="let ami of amis" [value]="ami.amiIds"
+                  <mat-option *ngFor="let ami of amis" [value]="ami.amiIds"
                     >({{ ami.amiIds }}) {{ ami.amiNames }}</mat-option
                   >
                 </mat-select>

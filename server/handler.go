@@ -312,9 +312,9 @@ func GetAWSData(c *gin.Context) {
 	m := []models.AmiAttr{}
 	for _, id := range tempConfig.Ami {
 		ami := models.AmiAttr{
-			AmiID:	id,
+			AmiID:   id,
 			AmiName: "",
-		} 
+		}
 		m = append(m, ami)
 	}
 

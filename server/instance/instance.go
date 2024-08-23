@@ -272,7 +272,7 @@ func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
 		if err != nil {
 			log.Printf("failed to retrieve images: %v", err)
 		}
-		
+
 		ami[i].AmiName = *imageResult.Images[0].Name
 	}
 

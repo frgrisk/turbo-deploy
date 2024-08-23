@@ -14,6 +14,6 @@ export const enum TimeUnit {
 }
 
 export interface AmiAttr {
-  amiIds: string
-  amiNames: string
+  amiIds: string;
+  amiNames: string;
 }
