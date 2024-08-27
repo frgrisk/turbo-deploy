@@ -52,6 +52,43 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
     TimeToExpire = each.value.timeToExpire
     DeployedBy   = "turbo-deploy"
   }
+  wait_for_fulfillment = true
+}
+
+// the tags specified in the spot request only applies to the request not the instances
+resource "aws_ec2_tag" "name" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.spot[each.key].spot_instance_id
+  key         = "Name"
+  value       = each.value.tags_all.Name
+}
+
+resource "aws_ec2_tag" "hostname" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.spot[each.key].spot_instance_id
+  key         = "Hostname"
+  value       = each.value.tags_all.Hostname
+}
+
+resource "aws_ec2_tag" "deploymentid" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.spot[each.key].spot_instance_id
+  key         = "DeploymentID"
+  value       = each.value.tags_all.DeploymentID
+}
+
+resource "aws_ec2_tag" "timetoexpire" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.spot[each.key].spot_instance_id
+  key         = "TimeToExpire"
+  value       = each.value.tags_all.TimeToExpire
+}
+
+resource "aws_ec2_tag" "deployedby" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.spot[each.key].spot_instance_id
+  key         = "DeployedBy"
+  value       = each.value.tags_all.DeployedBy
 }
 
 resource "aws_route53_record" "spot_record" {
