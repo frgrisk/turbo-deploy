@@ -43,7 +43,7 @@ func init() {
 
 	// setup allowed origins
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv)}
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv), fmt.Sprintf("https://%s", fullName), fmt.Sprintf("https://%s", fullName)}
 	r.Use(cors.New(config))
 
 	SetupRoutes(r)
@@ -261,6 +261,10 @@ func GetAWSData(c *gin.Context) {
 
 	tempConfig := models.TempConfig{}
 
+	// add region env
+	tempConfig.Region = regionEnv
+
+	// get list of AMIs from the env
 	err := json.Unmarshal([]byte(configEnv), &tempConfig)
 	if err != nil {
 		log.Printf("Error parsing environment variable: %v", err)
@@ -268,20 +272,68 @@ func GetAWSData(c *gin.Context) {
 		return
 	}
 
-	// add region env
-	tempConfig.Region = regionEnv
+	// Remove empty strings from the Ami config
+	i := 0
+	for _, ami := range tempConfig.Ami {
+		if ami != "" {
+			tempConfig.Ami[i] = ami
+			i++
+		}
+	}
+	tempConfig.Ami = tempConfig.Ami[:i]
 
-	// get list of snapshot AMIs, and add to the AMI available
-	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami)
+	// get list of snapshot AMIs(AMI created by user)
+	snapshotFilter := []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("tag:DeployedBy"),
+			Values: []string{"turbo-deploy"},
+		},
+		{
+			Name:   aws.String("state"),
+			Values: []string{"available"},
+		},
+	}
+
+	// get latest VOR AMI
+	vorFilter := []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("name"),
+			Values: []string{"VOR Stream*"},
+		},
+		{
+			Name:   aws.String("state"),
+			Values: []string{"available"},
+		},
+	}
+
+	filterGroup := [][]types.Filter{
+		snapshotFilter,
+		vorFilter,
+	}
+
+	// add the amis retrieved based on filters given
+	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami, filterGroup)
 	if err != nil {
 		log.Printf("Failed to get list of AMIs: %v", err)
 		return
 	}
 
 	// get the names of the ami
-	m := make(map[string]string)
-	for _, v := range tempConfig.Ami {
-		m[v] = ""
+	m := []models.AmiAttr{}
+	for _, id := range tempConfig.Ami {
+		ami := models.AmiAttr{
+			AmiID:   id,
+			AmiName: "",
+		}
+		m = append(m, ami)
 	}
 
 	m = instance.GetAMIName(m)

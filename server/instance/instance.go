@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -230,44 +231,40 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
-func GetAvailableAmis(amilist []string) ([]string, error) {
-	// check if an image for that instance already exists
-	filter := []types.Filter{
-		{
-			Name:   aws.String("is-public"),
-			Values: []string{"false"},
-		},
-		{
-			Name:   aws.String("tag:DeployedBy"),
-			Values: []string{"turbo-deploy"},
-		},
-	}
+func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string, error) {
+	for _, filter := range filterGroup {
+		imageResult, err := getImage(filter)
+		if err != nil {
+			log.Printf("failed to retrieve images: %v", err)
+		}
 
-	imageResult, err := getImage(filter)
-	if err != nil {
-		log.Printf("failed to retrieve images: %v", err)
-	}
-
-	// if it exists grab it
-	if len(imageResult.Images) == 0 {
-		log.Printf("No images returned for extra listing")
-	} else {
-		for i := range imageResult.Images {
-			image := imageResult.Images[i]
-			log.Printf("Image %s found, appending to the list...", *image.ImageId)
-			amilist = append(amilist, *image.ImageId)
+		// if it exists grab it
+		if len(imageResult.Images) == 0 {
+			log.Printf("No images returned for extra listing")
+		} else {
+			// sort the images found by creation date
+			sort.Slice(imageResult.Images, func(i, j int) bool {
+				timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
+				timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
+				return timeI.After(timeJ) // For descending order (newest first)
+			})
+			for i := range imageResult.Images {
+				image := imageResult.Images[i]
+				log.Printf("Image %s found, appending to the list...", *image.ImageId)
+				amilist = append(amilist, *image.ImageId)
+			}
 		}
 	}
 
 	return amilist, nil
 }
 
-func GetAMIName(ami map[string]string) map[string]string {
-	for k := range ami {
+func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
+	for i := range ami {
 		filter := []types.Filter{
 			{
 				Name:   aws.String("image-id"),
-				Values: []string{k},
+				Values: []string{ami[i].AmiID},
 			},
 		}
 
@@ -276,8 +273,7 @@ func GetAMIName(ami map[string]string) map[string]string {
 			log.Printf("failed to retrieve images: %v", err)
 		}
 
-		ami[k] = *imageResult.Images[0].Name
-
+		ami[i].AmiName = *imageResult.Images[0].Name
 	}
 
 	return ami

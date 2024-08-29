@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../shared/services/api.service';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -18,7 +18,7 @@ export class CreateDeploymentComponent implements OnInit {
 
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
-  amis: Map<string, string> = new Map<string, string>();
+  amis: AmiAttr[] = [];
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
@@ -67,9 +67,8 @@ export class CreateDeploymentComponent implements OnInit {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
       this.region = data.regions;
-
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
-      this.deploymentForm.get('ami')?.patchValue(this.amis);
+      this.deploymentForm.get('ami')?.patchValue(this.amis[0].amiIds);
       this.deploymentForm.get('region')?.patchValue(this.region);
     });
   }
