@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { Lifecycle, TimeUnit } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { ApiService } from '../shared/services/api.service';
 import { Subject, filter, switchMap, takeUntil, tap } from 'rxjs';
@@ -19,7 +19,7 @@ export class EditDeploymentComponent {
 
   editDeploymentForm!: FormGroup;
   serverSizes: string[] = [];
-  amis: Map<string, string> = new Map<string, string>();
+  amis: AmiAttr[] = [];
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
