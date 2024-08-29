@@ -292,6 +292,10 @@ func GetAWSData(c *gin.Context) {
 			Name:   aws.String("tag:DeployedBy"),
 			Values: []string{"turbo-deploy"},
 		},
+		{
+			Name:   aws.String("state"),
+			Values: []string{"available"},
+		},
 	}
 
 	// get latest VOR AMI
@@ -303,6 +307,10 @@ func GetAWSData(c *gin.Context) {
 		{
 			Name:   aws.String("name"),
 			Values: []string{"VOR Stream*"},
+		},
+		{
+			Name:   aws.String("state"),
+			Values: []string{"available"},
 		},
 	}
 
