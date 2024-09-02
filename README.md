@@ -23,30 +23,24 @@ The Turbo Deploy Web Application is made with the use of Angular, to set it up t
 
 1. clone this repository
 
-    `
-    git clone git@github.com:frgrisk/turbo-deploy.git
-    `
+   `git clone git@github.com:frgrisk/turbo-deploy.git`
 
 2. Change to the client directory
 
-    `
-    cd client
-    `
+   `cd client`
 
 3. Change the url in src/environments/environment.prod.ts to the API gateway that you previously made with the Terraform module
 
-    ``` ts
-    export const environment = {
-    production: true,
-    apiBaseUrl: '', //replace with actual url
-    };
-    ```
+   ```ts
+   export const environment = {
+     production: true,
+     apiBaseUrl: "", //replace with actual url
+   };
+   ```
 
 4. Run the ng build command
 
-    `
-    ng build configuration --production
-    `
+   `ng build configuration --production`
 
 5. You now have the code to the web application generated in dist/turbo-deploy
 
@@ -72,31 +66,31 @@ You will be presented with a few settings with it being:
 
 - Hostname
 
-    This will be the name of your server, it must be set without any special characters, spaces, or symbols (e.g., @, #, -, _, etc...)
+  This will be the name of your server, it must be set without any special characters, spaces, or symbols (e.g., @, #, -, \_, etc...)
 
 - Region
 
-    The region where the server you wish to deploy will be placed. At the time of writing this document, this will only be limited to us-east-2.
+  The region where the server you wish to deploy will be placed. At the time of writing this document, this will only be limited to us-east-2.
 
 - AMI Choice
 
-    You will be presented with multiple AMIs (Amazon Machine Image) that you can deploy, this is the type of server that you are deploying. Choose the ones that is relevant to your use case
+  You will be presented with multiple AMIs (Amazon Machine Image) that you can deploy, this is the type of server that you are deploying. Choose the ones that is relevant to your use case
 
 - Server Size
 
-    This is the size(capability) of your server, the bigger it is the more resources it can commit to running the tasks you have given (more CPU, Memory, etc...).
+  This is the size(capability) of your server, the bigger it is the more resources it can commit to running the tasks you have given (more CPU, Memory, etc...).
 
-    For a personal use case it is enough to run it on a t3.medium server size, while bigger ones should only be used if your workload exceeds the server’s capacity.
+  For a personal use case it is enough to run it on a t3.medium server size, while bigger ones should only be used if your workload exceeds the server’s capacity.
 
 - Lifecycle
 
-    There are two settings that can be chosen, on-demand and spot. For most use cases, spot is the preferred option as it is more cost-effective, though it means that your server may face interruptions.
+  There are two settings that can be chosen, on-demand and spot. For most use cases, spot is the preferred option as it is more cost-effective, though it means that your server may face interruptions.
 
-    If that is not an option and your use case demands that the server always be up (e.g., client demo, etc...) Then you can choose to deploy an on-demand instance instead.
+  If that is not an option and your use case demands that the server always be up (e.g., client demo, etc...) Then you can choose to deploy an on-demand instance instead.
 
 - Expiry
 
-    This setting configures how long your server will live for, if this is configured then the server will automatically be terminated after the amount of time that you have set has passed. It is useful to ensure that resources are not wasted when they are not in use.
+  This setting configures how long your server will live for, if this is configured then the server will automatically be terminated after the amount of time that you have set has passed. It is useful to ensure that resources are not wasted when they are not in use.
 
 #### Step 3: Return to the main page
 
@@ -118,7 +112,7 @@ Press on the green arrow button to start the server. When it is done you can see
 
 ### Server Actions (Edit)
 
-Whenever you want to change the settings of your server (e.g., hostname, time to live, etc...) you may use this functionality. Do note however that only the change of server size and TTL will result in keeping your current server but changing its settings.  
+Whenever you want to change the settings of your server (e.g., hostname, time to live, etc...) you may use this functionality. Do note however that only the change of server size and TTL will result in keeping your current server but changing its settings.
 
 Meanwhile, changing the hostname, AMI and lifecycle will result in your server being terminated and a new one being created. What this means is that any work you have done in the previous server will not be migrated over to the new server that you have edited to.
 
@@ -170,7 +164,7 @@ After a few minutes, you can now see that there is a new AMI that is based on yo
 
 ### Example Usage
 
-After a VOR Server has been deployed, you can access the server through the hostname that has been set simply by copying the hostname and pasting it in your browser.
+After a Server has been deployed, you can access the server through the hostname that has been set simply by copying the hostname and pasting it in your browser.
 
 ![example gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/example.gif)
 
