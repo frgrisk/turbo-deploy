@@ -114,15 +114,15 @@ Press on the green arrow button to start the server. When it is done you can see
 
 ### Server Actions (Edit)
 
-Whenever you want to change the settings of your server (e.g., hostname, time to live, etc...) you may use this functionality. Do note however that only the change of hostname, server size and TTL will result in keeping your current server but changing its settings.
+Whenever you want to change the settings of your server (e.g., hostname, time to live, etc...) you may use this functionality. Do note however that only the change of server size and TTL will result in keeping your current server but changing its settings.  
 
-Meanwhile, changing the AMI and lifecycle will result in your server being terminated and a new one being created. What this means is that any work you have done in the previous server will not be migrated over to the new server that you have edited to.
+Meanwhile, changing the hostname, AMI and lifecycle will result in your server being terminated and a new one being created. What this means is that any work you have done in the previous server will not be migrated over to the new server that you have edited to.
 
 If you want to change the lifecycle of your server and keep the data, you may take a snapshot of your current server and deploy a new one based on the AMI snapshot you have taken.
 
 #### Step 1: Press on the edit button
 
-This will bring you over to the edit deployment form
+Press on the pencil button in blue to edit the deployment, this will bring you over to the edit deployment form
 
 #### Step 2: Fill in the edit deployment form
 
@@ -138,6 +138,8 @@ Once you no longer have any use for the server, it is recommended that you delet
 
 #### Step 1: Press on the delete button
 
+Press on the trashbin button in red to delete deployment, after a few seconds to minutes you can press on the refresh button and see that the server is gone.
+
 ### Server Actions (Snapshot)
 
 Snapshots allow you to capture the state of your server at a specific point in time. This feature is useful for creating backups, recovering from errors, etc. By taking a snapshot, you can revert your server to a previous state if needed.
@@ -146,7 +148,7 @@ Currently, each server deployed can only have one AMI snapshot associated with i
 
 #### Step 1: Press on the snapshot button
 
-This will start the process of creating an AMI snapshot.
+Press on the camera button in black to start the process of creating an AMI snapshot.
 
 #### Step 2: Take note of snapshot ID
 
