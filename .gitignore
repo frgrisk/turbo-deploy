@@ -60,3 +60,6 @@ turbo-deploy
 *.zip
 
 node_modules
+
+# Documentation files
+*.mp4
