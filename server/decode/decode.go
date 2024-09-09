@@ -4,30 +4,33 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
-	"fmt"
 	"io"
+	"log"
 )
 
 // Function to decode and decompress base64 gzip string
-func decodeBase64Gzip(encodedStr string) ([]byte, error) {
-	// Decode base64
-	data, err := base64.StdEncoding.DecodeString(encodedStr)
+func DecodeBase64Gzip(encodedStr string) (string, error) {
+
+	// // Decode base64 string
+	decoded, err := base64.StdEncoding.DecodeString(encodedStr)
 	if err != nil {
-		return nil, fmt.Errorf("base64 decode failed: %v", err)
+		log.Printf("Failed to decode bas64 string")
+		return "", err
 	}
 
-	// Create a reader for gzip
-	reader, err := gzip.NewReader(bytes.NewReader(data))
+	// Create a gzip reader
+	gzr, err := gzip.NewReader(bytes.NewReader(decoded))
 	if err != nil {
-		return nil, fmt.Errorf("gzip reader creation failed: %v", err)
-	}
-	defer reader.Close()
-
-	// Read decompressed data
-	decompressedData, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, fmt.Errorf("gzip read failed: %v", err)
+		log.Printf("Failed to create a gzip reader")
+		return "", err
 	}
 
-	return decompressedData, nil
+	// Read result from gzip reader
+	result, err := io.ReadAll(gzr)
+	if err != nil {
+		log.Printf("Failed to read from reader")
+		return "", err
+	}
+
+	return string(result), nil
 }
