@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/frgrisk/turbo-deploy/server/db"
+	"github.com/frgrisk/turbo-deploy/server/decode"
 	"github.com/frgrisk/turbo-deploy/server/instance"
 	"github.com/frgrisk/turbo-deploy/server/models"
 	"github.com/frgrisk/turbo-deploy/server/util"
@@ -258,6 +259,7 @@ func GetAWSData(c *gin.Context) {
 	// read env variable
 	configEnv := os.Getenv("MY_AMI_ATTR")
 	regionEnv := os.Getenv("MY_REGION")
+	filterEnv := os.Getenv("AMI_FILTERS")
 
 	tempConfig := models.TempConfig{}
 
@@ -282,45 +284,19 @@ func GetAWSData(c *gin.Context) {
 	}
 	tempConfig.Ami = tempConfig.Ami[:i]
 
-	// get list of snapshot AMIs(AMI created by user)
-	snapshotFilter := []types.Filter{
-		{
-			Name:   aws.String("is-public"),
-			Values: []string{"false"},
-		},
-		{
-			Name:   aws.String("tag:DeployedBy"),
-			Values: []string{"turbo-deploy"},
-		},
-		{
-			Name:   aws.String("state"),
-			Values: []string{"available"},
-		},
-	}
+	decodedFilter, _ := decode.DecodeBase64Gzip(filterEnv)
 
-	// get latest VOR AMI
-	vorFilter := []types.Filter{
-		{
-			Name:   aws.String("is-public"),
-			Values: []string{"false"},
-		},
-		{
-			Name:   aws.String("name"),
-			Values: []string{"VOR Stream*"},
-		},
-		{
-			Name:   aws.String("state"),
-			Values: []string{"available"},
-		},
-	}
-
-	filterGroup := [][]types.Filter{
-		snapshotFilter,
-		vorFilter,
+	// get list of AMIs from the filter
+	var filterMap map[string][]types.Filter
+	err = json.Unmarshal([]byte(decodedFilter), &filterMap)
+	if err != nil {
+		log.Printf("Error parsing environment variable: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
 	}
 
 	// add the amis retrieved based on filters given
-	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami, filterGroup)
+	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami, filterMap)
 	if err != nil {
 		log.Printf("Failed to get list of AMIs: %v", err)
 		return
