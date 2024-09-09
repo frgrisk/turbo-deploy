@@ -284,7 +284,7 @@ func GetAWSData(c *gin.Context) {
 	}
 	tempConfig.Ami = tempConfig.Ami[:i]
 
-	decodedFilter, _ := decode.DecodeBase64Gzip(filterEnv)
+	decodedFilter, _ := decode.Base64Gzip(filterEnv)
 
 	// get list of AMIs from the filter
 	var filterMap map[string][]types.Filter
