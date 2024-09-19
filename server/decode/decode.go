@@ -10,7 +10,6 @@ import (
 
 // Function to decode and decompress base64 gzip string
 func Base64Gzip(encodedStr string) (string, error) {
-
 	// // Decode base64 string
 	decoded, err := base64.StdEncoding.DecodeString(encodedStr)
 	if err != nil {
