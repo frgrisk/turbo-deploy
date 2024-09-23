@@ -231,8 +231,8 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
-func GetAvailableAmis(amilist []string, filterGroup [][]types.Filter) ([]string, error) {
-	for _, filter := range filterGroup {
+func GetAvailableAmis(amilist []string, filterMap map[string][]types.Filter) ([]string, error) {
+	for _, filter := range filterMap {
 		imageResult, err := getImage(filter)
 		if err != nil {
 			log.Printf("failed to retrieve images: %v", err)
