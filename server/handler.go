@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -101,6 +102,9 @@ func CreateInstanceRequest(c *gin.Context) {
 	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
 	hostname := req.Hostname + "." + domainEnv
 
+	// change userdata array to string
+	userdata_string := strings.Join(req.UserData, ",")
+
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                uuid.New().String()[:8],
@@ -112,6 +116,7 @@ func CreateInstanceRequest(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          req.SnapShot,
 		ContentDeployment: req.ContentDeployment,
+		UserData:		   userdata_string,
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
@@ -260,14 +265,21 @@ func GetAWSData(c *gin.Context) {
 	configEnv := os.Getenv("MY_AMI_ATTR")
 	regionEnv := os.Getenv("MY_REGION")
 	filterEnv := os.Getenv("AMI_FILTERS")
+	userdataEnv := os.Getenv("USER_SCRIPTS")
 
 	tempConfig := models.TempConfig{}
-
-	// add region env
-	tempConfig.Region = regionEnv
+	config := models.Config{}
+	
+	// get list of userdata scripts from the env
+	err := json.Unmarshal([]byte(userdataEnv), &config.UserData)
+	if err != nil {
+		log.Printf("Error parsing environment variable: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	// get list of AMIs from the env
-	err := json.Unmarshal([]byte(configEnv), &tempConfig)
+	err = json.Unmarshal([]byte(configEnv), &tempConfig)
 	if err != nil {
 		log.Printf("Error parsing environment variable: %v", err)
 		abortWithLog(c, http.StatusInternalServerError, err)
@@ -331,9 +343,7 @@ func GetAWSData(c *gin.Context) {
 
 	m = instance.GetAMIName(m)
 
-	config := models.Config{}
-
-	config.Region = tempConfig.Region
+	config.Region = regionEnv
 	config.ServerSizes = tempConfig.ServerSizes
 	config.Ami = m
 

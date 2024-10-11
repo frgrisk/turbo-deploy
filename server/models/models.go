@@ -10,6 +10,7 @@ type DynamoDBData struct {
 	CreationUser      string `dynamodbav:"creationUser"`
 	SnapShot          string `dynamodbav:"snapShot"`
 	ContentDeployment string `dynamodbav:"contentDeployment"`
+	UserData		  string `dynamodbav:"userData"`
 	TimeToExpire      int64  `dynamodbav:"timeToExpire"`
 }
 
@@ -29,6 +30,7 @@ type Payload struct {
 	ContentDeployment string `json:"contentDeployment"`
 	TTLUnit           string `json:"ttlUnit"`
 	TimeToExpire      string `json:"timeToExpire"`
+	UserData		  []string `json:"userData"`
 	TTLValue          int64  `json:"ttlValue"`
 }
 
@@ -36,6 +38,7 @@ type Config struct {
 	Ami         []AmiAttr `json:"amis"`
 	Region      string    `json:"regions"`
 	ServerSizes []string  `json:"serverSizes"`
+	UserData	[]string  `json:"userData"`
 }
 
 type TempConfig struct {
