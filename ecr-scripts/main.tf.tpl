@@ -46,9 +46,9 @@ data "aws_route53_zone" "hosted_zone" {
   private_zone = false
 }
 
-data "aws_s3_object" "user_data" {
+data "aws_s3_object" "user_data_template" {
   bucket = "${S3_BUCKET_NAME}" 
-  key    = "user-data-scripts/user-data.sh"
+  key    = "user-data-template/template.sh"
 }
 
 data "aws_key_pair" "admin_key" {
