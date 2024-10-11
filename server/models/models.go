@@ -10,7 +10,7 @@ type DynamoDBData struct {
 	CreationUser      string `dynamodbav:"creationUser"`
 	SnapShot          string `dynamodbav:"snapShot"`
 	ContentDeployment string `dynamodbav:"contentDeployment"`
-	UserData		  string `dynamodbav:"userData"`
+	UserData		  []string `dynamodbav:"userData"`
 	TimeToExpire      int64  `dynamodbav:"timeToExpire"`
 }
 

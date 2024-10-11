@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -101,9 +100,6 @@ func CreateInstanceRequest(c *gin.Context) {
 	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
 	hostname := req.Hostname + "." + domainEnv
 
-	// change userdata array to string
-	userdata_string := strings.Join(req.UserData, ",")
-
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                uuid.New().String()[:8],
@@ -115,7 +111,7 @@ func CreateInstanceRequest(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          req.SnapShot,
 		ContentDeployment: req.ContentDeployment,
-		UserData:		   userdata_string,
+		UserData:		   req.UserData,
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
@@ -189,6 +185,7 @@ func UpdateInstanceRequest(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          req.SnapShot,
 		ContentDeployment: req.ContentDeployment,
+		UserData:		   req.UserData,
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
