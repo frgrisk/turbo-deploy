@@ -15,7 +15,8 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   key_name               = data.aws_key_pair.admin_key.key_name
   iam_instance_profile   = data.aws_iam_instance_profile.instance_profile.name
-  user_data              = templatestring(data.aws_s3_object.user_data.body, { hostname = each.value.hostname })
+  user_data              = templatestring(data.aws_s3_object.user_data_template.body, { user_data = each.value.userData, hostname = each.value.hostname })
+  
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
@@ -46,7 +47,8 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
   key_name               = data.aws_key_pair.admin_key.key_name
   iam_instance_profile   = data.aws_iam_instance_profile.instance_profile.name
-  user_data              = templatestring(data.aws_s3_object.user_data.body, { hostname = each.value.hostname })
+  user_data              = templatestring(data.aws_s3_object.user_data_template.body, { user_data = each.value.userData, hostname = each.value.hostname })
+  
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
@@ -58,6 +60,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
 }
 
 // the tags specified in the spot request only applies to the request not the instances
+// so we have to create separate resource tags to apply to the instances
 resource "aws_ec2_tag" "name" {
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
