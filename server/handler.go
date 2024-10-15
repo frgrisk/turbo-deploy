@@ -112,7 +112,7 @@ func CreateInstanceRequest(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          req.SnapShot,
 		ContentDeployment: req.ContentDeployment,
-		UserData:		   req.UserData,
+		UserData:          req.UserData,
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
@@ -186,7 +186,7 @@ func UpdateInstanceRequest(c *gin.Context) {
 		Lifecycle:         req.Lifecycle,
 		SnapShot:          req.SnapShot,
 		ContentDeployment: req.ContentDeployment,
-		UserData:		   req.UserData,
+		UserData:          req.UserData,
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
@@ -266,7 +266,7 @@ func GetAWSData(c *gin.Context) {
 
 	tempConfig := models.TempConfig{}
 	config := models.Config{}
-	
+
 	// get list of userdata scripts from the env
 	err := json.Unmarshal([]byte(userdataEnv), &config.UserData)
 	if err != nil {
