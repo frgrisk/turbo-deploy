@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
@@ -20,6 +20,7 @@ export class EditDeploymentComponent {
   editDeploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: AmiAttr[] = [];
+  userData: string[] = [];
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
@@ -44,6 +45,7 @@ export class EditDeploymentComponent {
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [Validators.required]),
       serverSize: new FormControl('', [Validators.required]),
+      userData: new FormControl(''),
       lifecycle: new FormControl(Lifecycle.ON_DEMAND, [Validators.required]),
       ttlValue: new FormControl('', [Validators.min(1)]),
       ttlUnit: new FormControl(''),
@@ -74,6 +76,7 @@ export class EditDeploymentComponent {
           this.serverSizes = data.serverSizes;
           this.amis = data.amis;
           this.region = data.regions;
+          this.userData = data.userData;
         }),
         switchMap(() => this.deploymentService.currentEdit$),
         filter((editObject): editObject is string => !!editObject),
@@ -88,6 +91,7 @@ export class EditDeploymentComponent {
           region: response.Region,
           ami: response.Ami,
           serverSize: response.ServerSize,
+          userData: response.UserData,
           lifecycle: response.Lifecycle,
         }),
           { emitEvent: false });
@@ -104,6 +108,7 @@ export class EditDeploymentComponent {
       ami: form.ami,
       serverSize: form.serverSize,
       lifecycle: form.lifecycle,
+      userData: form.userData,
     };
 
     const ttlValue = this.editDeploymentForm.get('ttlValue')?.value;
