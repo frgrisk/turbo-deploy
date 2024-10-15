@@ -9,14 +9,15 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
     if jsondecode(v).lifecycle == "on-demand"
   }
 
-  ami                    = each.value.ami
-  instance_type          = each.value.serverSize
-  subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
-  vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
-  key_name               = data.aws_key_pair.admin_key.key_name
-  iam_instance_profile   = data.aws_iam_instance_profile.instance_profile.name
-  user_data              = templatestring(data.aws_s3_object.user_data_template.body, { user_data = join(",", each.value.userData), hostname = each.value.hostname })
-  
+  ami                         = each.value.ami
+  instance_type               = each.value.serverSize
+  subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
+  vpc_security_group_ids      = local.use_custom_security_group ? [var.security_group_id] : null
+  key_name                    = data.aws_key_pair.admin_key.key_name
+  iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
+  user_data                   = templatestring(data.aws_s3_object.user_data_template.body, { user_data = join(",", each.value.userData), hostname = each.value.hostname })
+  user_data_replace_on_change = true
+
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
@@ -41,14 +42,15 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
     if jsondecode(v).lifecycle == "spot"
   }
 
-  ami                    = each.value.ami
-  instance_type          = each.value.serverSize
-  subnet_id              = local.use_custom_subnet ? var.public_subnet_id : null
-  vpc_security_group_ids = local.use_custom_security_group ? [var.security_group_id] : null
-  key_name               = data.aws_key_pair.admin_key.key_name
-  iam_instance_profile   = data.aws_iam_instance_profile.instance_profile.name
-  user_data              = templatestring(data.aws_s3_object.user_data_template.body, { user_data = join(",", each.value.userData), hostname = each.value.hostname })
-  
+  ami                         = each.value.ami
+  instance_type               = each.value.serverSize
+  subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
+  vpc_security_group_ids      = local.use_custom_security_group ? [var.security_group_id] : null
+  key_name                    = data.aws_key_pair.admin_key.key_name
+  iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
+  user_data                   = templatestring(data.aws_s3_object.user_data_template.body, { user_data = join(",", each.value.userData), hostname = each.value.hostname })
+  user_data_replace_on_change = true
+
   tags = {
     Name         = each.value.hostname
     Hostname     = each.value.hostname
