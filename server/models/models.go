@@ -1,17 +1,17 @@
 package models
 
 type DynamoDBData struct {
-	ID                string `dynamodbav:"id"`
-	Ami               string `dynamodbav:"ami"`
-	ServerSize        string `dynamodbav:"serverSize"`
-	Hostname          string `dynamodbav:"hostname"`
-	Region            string `dynamodbav:"region"`
-	Lifecycle         string `dynamodbav:"lifecycle"`
-	CreationUser      string `dynamodbav:"creationUser"`
-	SnapShot          string `dynamodbav:"snapShot"`
-	ContentDeployment string `dynamodbav:"contentDeployment"`
-	UserData		  []string `dynamodbav:"userData"`
-	TimeToExpire      int64  `dynamodbav:"timeToExpire"`
+	ID                string   `dynamodbav:"id"`
+	Ami               string   `dynamodbav:"ami"`
+	ServerSize        string   `dynamodbav:"serverSize"`
+	Hostname          string   `dynamodbav:"hostname"`
+	Region            string   `dynamodbav:"region"`
+	Lifecycle         string   `dynamodbav:"lifecycle"`
+	CreationUser      string   `dynamodbav:"creationUser"`
+	SnapShot          string   `dynamodbav:"snapShot"`
+	ContentDeployment string   `dynamodbav:"contentDeployment"`
+	UserData          []string `dynamodbav:"userData"`
+	TimeToExpire      int64    `dynamodbav:"timeToExpire"`
 }
 
 type Response struct {
@@ -19,26 +19,26 @@ type Response struct {
 }
 
 type Payload struct {
-	Ami               string `json:"ami"`
-	InstanceID        string `json:"instanceId"`
-	ServerSize        string `json:"serverSize"`
-	Hostname          string `json:"hostname"`
-	Region            string `json:"region"`
-	Lifecycle         string `json:"lifeCycle"`
-	CreationUser      string `json:"creationUser"`
-	SnapShot          string `json:"snapShot"`
-	ContentDeployment string `json:"contentDeployment"`
-	TTLUnit           string `json:"ttlUnit"`
-	TimeToExpire      string `json:"timeToExpire"`
-	UserData		  []string `json:"userData"`
-	TTLValue          int64  `json:"ttlValue"`
+	Ami               string   `json:"ami"`
+	InstanceID        string   `json:"instanceId"`
+	ServerSize        string   `json:"serverSize"`
+	Hostname          string   `json:"hostname"`
+	Region            string   `json:"region"`
+	Lifecycle         string   `json:"lifeCycle"`
+	CreationUser      string   `json:"creationUser"`
+	SnapShot          string   `json:"snapShot"`
+	ContentDeployment string   `json:"contentDeployment"`
+	TTLUnit           string   `json:"ttlUnit"`
+	TimeToExpire      string   `json:"timeToExpire"`
+	UserData          []string `json:"userData"`
+	TTLValue          int64    `json:"ttlValue"`
 }
 
 type Config struct {
 	Ami         []AmiAttr `json:"amis"`
 	Region      string    `json:"regions"`
 	ServerSizes []string  `json:"serverSizes"`
-	UserData	[]string  `json:"userData"`
+	UserData    []string  `json:"userData"`
 }
 
 type TempConfig struct {

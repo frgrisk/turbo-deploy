@@ -95,7 +95,6 @@ export class EditDeploymentComponent {
           lifecycle: response.Lifecycle,
         }),
           { emitEvent: false };
-        console.log(this.editDeploymentForm.getRawValue())
         this.currentExpiry = convertDateTime(response.TimeToExpire);
       });
   }
