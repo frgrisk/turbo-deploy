@@ -520,6 +520,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		SnapShot:          snapshotID,
 		ContentDeployment: req.ContentDeployment,
 		TimeToExpire:      timeToLive,
+		UserData:		   req.UserData,
 	}
 
 	// Update the DynamoDB row to include the captured snapshot ID
