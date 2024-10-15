@@ -45,8 +45,8 @@ export class EditDeploymentComponent {
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [Validators.required]),
       serverSize: new FormControl('', [Validators.required]),
-      userData: new FormControl(''),
-      lifecycle: new FormControl(Lifecycle.ON_DEMAND, [Validators.required]),
+      userData: new FormControl([]),
+      lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
       ttlValue: new FormControl('', [Validators.min(1)]),
       ttlUnit: new FormControl(''),
     });
