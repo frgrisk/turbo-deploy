@@ -89,7 +89,7 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 					Status:           string(instance.State.Name),
 					UserData:         strings.Split(getInstanceTagValue("UserData", instance.Tags), ","),
 				}
-				
+
 				deployments = append(deployments, deployment)
 			}
 		}
