@@ -24,6 +24,7 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire
     DeployedBy   = "turbo-deploy"
+    UserData     = join(",", each.value.userData)
   }
 }
 
@@ -57,6 +58,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire
     DeployedBy   = "turbo-deploy"
+    UserData     = join(",", each.value.userData)
   }
   wait_for_fulfillment = true
 }
@@ -96,6 +98,13 @@ resource "aws_ec2_tag" "deployedby" {
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "DeployedBy"
   value       = each.value.tags_all.DeployedBy
+}
+
+resource "aws_ec2_tag" "userdata" {
+  for_each    = aws_spot_instance_request.my_deployed_spot_instances
+  resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
+  key         = "UserData"
+  value       = each.value.tags_all.UserData
 }
 
 resource "aws_route53_record" "spot_record" {

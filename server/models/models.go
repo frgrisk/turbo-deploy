@@ -53,14 +53,15 @@ type AmiAttr struct {
 }
 
 type DeploymentResponse struct {
-	DeploymentID     string `json:"deploymentId"`  // Represents dynamoDB id that created this instance
-	InstanceID       string `json:"ec2InstanceId"` // Represents ec2 instance id
-	Ami              string `json:"ami"`
-	ServerSize       string `json:"serverSize"`
-	SnapshotID       string `json:"snapshotId"`
-	Hostname         string `json:"hostname"`
-	AvailabilityZone string `json:"availabilityZone"`
-	Lifecycle        string `json:"lifecycle"`
-	Status           string `json:"status"`
-	TimeToExpire     string `json:"timeToExpire"`
+	DeploymentID     string   `json:"deploymentId"`  // Represents dynamoDB id that created this instance
+	InstanceID       string   `json:"ec2InstanceId"` // Represents ec2 instance id
+	Ami              string   `json:"ami"`
+	ServerSize       string   `json:"serverSize"`
+	SnapshotID       string   `json:"snapshotId"`
+	Hostname         string   `json:"hostname"`
+	AvailabilityZone string   `json:"availabilityZone"`
+	Lifecycle        string   `json:"lifecycle"`
+	Status           string   `json:"status"`
+	TimeToExpire     string   `json:"timeToExpire"`
+	UserData         []string `json:"userData"`
 }

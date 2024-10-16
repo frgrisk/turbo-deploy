@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -86,8 +87,9 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 					AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
 					Lifecycle:        getLifecycle(instance.InstanceLifecycle),
 					Status:           string(instance.State.Name),
+					UserData:         strings.Split(getInstanceTagValue("UserData", instance.Tags), ","),
 				}
-
+				
 				deployments = append(deployments, deployment)
 			}
 		}
