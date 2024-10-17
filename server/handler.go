@@ -286,13 +286,30 @@ func GetAWSData(c *gin.Context) {
 
 	decodedFilter, _ := decode.Base64Gzip(filterEnv)
 
-	// get list of AMIs from the filter
 	var filterMap map[string][]types.Filter
+
+	// get list of AMIs from the filters provided by user
 	err = json.Unmarshal([]byte(decodedFilter), &filterMap)
 	if err != nil {
 		log.Printf("Error parsing environment variable: %v", err)
 		abortWithLog(c, http.StatusInternalServerError, err)
 		return
+	}
+
+	// manually add mandatory filter to the map
+	filterMap["snapshot-ami"] = []types.Filter{
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+		{
+			Name:   aws.String("tag:DeployedBy"),
+			Values: []string{"turbo-deploy"},
+		},
+		{
+			Name:   aws.String("state"),
+			Values: []string{"available"},
+		},
 	}
 
 	// add the amis retrieved based on filters given
