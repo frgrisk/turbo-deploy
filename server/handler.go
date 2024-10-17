@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -156,6 +157,10 @@ func GetInstanceRequest(c *gin.Context) {
 		}
 		return
 	}
+
+	// remove domain from hostname
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
+	record.Hostname = strings.TrimSuffix(record.Hostname, "."+domainEnv)
 
 	c.JSON(http.StatusOK, record)
 }

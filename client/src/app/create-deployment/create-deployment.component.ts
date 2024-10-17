@@ -37,7 +37,7 @@ export class CreateDeploymentComponent implements OnInit {
 
   initializeForm() {
     this.deploymentForm = new FormGroup({
-      hostname: new FormControl('', [Validators.required]),
+      hostname: new FormControl('', [Validators.required, Validators.pattern('[a-zA-Z0-9]*')]),
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [Validators.required]),
       serverSize: new FormControl('', [Validators.required]),
