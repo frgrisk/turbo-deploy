@@ -17,6 +17,12 @@ provider "aws" {
   region = "${AWS_REGION_CUSTOM}"
 }
 
+variable "script_string" {
+  description = "The user-data scripts available"
+  type        = set(string)
+  default     = ${USER_SCRIPTS}
+}
+
 variable "aws_region" {
   description = "The AWS region to deploy resources into"
   type        = string
@@ -46,9 +52,28 @@ data "aws_route53_zone" "hosted_zone" {
   private_zone = false
 }
 
-data "aws_s3_object" "user_data_template" {
-  bucket = "${S3_BUCKET_NAME}" 
-  key    = "user-data-template/template.sh"
+data "aws_s3_object" "user_data_script" {
+  for_each = var.script_string
+  bucket   = "${S3_BUCKET_NAME}"
+  key      = "user-data-scripts/${each.key}.sh"
+}
+
+data "cloudinit_config" "full_script" {
+  for_each = {
+    for k, v in data.external.dynamodb_data.result : k => jsondecode(v)
+  }
+  gzip          = false
+  base64_encode = false
+
+  dynamic "part" {
+    for_each = each.value.userData
+    iterator = name
+    content {
+      filename     = "${name.value}.sh"
+      content_type = "text/x-shellscript"
+      content      = data.aws_s3_object.user_data_script[name.value].body
+    }
+  }
 }
 
 data "aws_key_pair" "admin_key" {
