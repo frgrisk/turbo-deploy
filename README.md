@@ -54,7 +54,7 @@ Once the Turbo Infrastructure and Web Application has been set up, this is how y
 
 Setting up a server for your use, allowing you to configure the server to your needs.
 
-![create deployment gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/createdeployment.gif)
+![create deployment gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/createdeployment.gif)
 
 #### Step 1: Click on the New Deployment Button
 
@@ -100,7 +100,7 @@ After a certain amount of time passes (a few minutes) you can refresh the main p
 
 When your server is not in use or vice versa, then you will need to stop/start your server. Here is how you do so.
 
-![start stop gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/stopstart.gif)
+![start stop gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/stopstart.gif)
 
 #### Step 1: Stop Server
 
@@ -118,7 +118,7 @@ Meanwhile, changing the hostname, AMI and lifecycle will result in your server b
 
 If you want to change the lifecycle of your server and keep the data, you may take a snapshot of your current server and deploy a new one based on the AMI snapshot you have taken.
 
-![edit deployment gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/editdeployment.gif)
+![edit deployment gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/editdeployment.gif)
 
 #### Step 1: Press on the edit button
 
@@ -136,7 +136,7 @@ After a few minutes, you can refresh the main page and see that the server you h
 
 Once you no longer have any use for the server, it is recommended that you delete the server by using this functionality. It will take a few minutes, and your server will be removed from the dashboard.
 
-![delete server gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/terminate.gif)
+![delete server gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/terminate.gif)
 
 #### Step 1: Press on the delete button
 
@@ -148,7 +148,7 @@ Snapshots allow you to capture the state of your server at a specific point in t
 
 Currently, each server deployed can only have one AMI snapshot associated with it, so creating a new snapshot on your server that already has an AMI snapshot will result in the previous snapshot being deleted.
 
-![snapshot gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/snapshot.gif)
+![snapshot gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/snapshot.gif)
 
 #### Step 1: Press on the snapshot button
 
@@ -166,7 +166,7 @@ After a few minutes, you can now see that there is a new AMI that is based on yo
 
 After a Server has been deployed, you can access the server through the hostname that has been set simply by copying the hostname and pasting it in your browser.
 
-![example gif](https://github.com/frgrisk/turbo-deploy/blob/documentation/readme_assets/gifs/example.gif)
+![example gif](https://github.com/frgrisk/turbo-deploy/blob/main/readme_assets/gifs/example.gif)
 
 #### Step 1: Copy Hostname
 
