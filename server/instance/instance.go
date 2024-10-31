@@ -99,10 +99,10 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 }
 
 func splitUserData(userData string) []string {
-    if userData == "" {
-        return []string{}
-    }
-    return strings.Split(userData, ",")
+	if userData == "" {
+		return []string{}
+	}
+	return strings.Split(userData, ",")
 }
 func StartInstance(instanceID string) error {
 	input := &ec2.StartInstancesInput{
