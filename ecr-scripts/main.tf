@@ -54,9 +54,9 @@ data "aws_route53_zone" "hosted_zone" {
   private_zone = false
 }
 
-data "aws_s3_object" "user_data_template" {
-  bucket = "turbo-deploy"
-  key    = "user-data-template/template.sh"
+data "aws_s3_object" "user_data_base" {
+  bucket = "${S3_BUCKET_NAME}"
+  key    = "user-data-base/base.sh"
 }
 
 data "aws_s3_object" "user_data_script" {
@@ -71,6 +71,12 @@ data "cloudinit_config" "full_script" {
   }
   gzip          = false
   base64_encode = false
+
+  part {
+      filename     = "base.sh"
+      content_type = "text/x-shellscript"
+      content      = data.aws_s3_object.user_data_base.body
+  }
 
   dynamic "part" {
     for_each = each.value.userData
