@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -86,6 +87,7 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 					AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
 					Lifecycle:        getLifecycle(instance.InstanceLifecycle),
 					Status:           string(instance.State.Name),
+					UserData:         splitUserData(getInstanceTagValue("UserData", instance.Tags)),
 				}
 
 				deployments = append(deployments, deployment)
@@ -94,6 +96,13 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 	}
 
 	return deployments, nil
+}
+
+func splitUserData(userData string) []string {
+	if userData == "" {
+		return []string{}
+	}
+	return strings.Split(userData, ",")
 }
 
 func StartInstance(instanceID string) error {
