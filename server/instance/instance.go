@@ -104,6 +104,7 @@ func splitUserData(userData string) []string {
 	}
 	return strings.Split(userData, ",")
 }
+
 func StartInstance(instanceID string) error {
 	input := &ec2.StartInstancesInput{
 		InstanceIds: []string{instanceID},
