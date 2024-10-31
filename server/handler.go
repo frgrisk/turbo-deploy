@@ -180,12 +180,16 @@ func UpdateInstanceRequest(c *gin.Context) {
 	id := c.Param(pathParameterName)
 	log.Println("update request for id:", id)
 
+	// get hostname and concat with domain
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
+	hostname := req.Hostname + "." + domainEnv
+
 	// Convert request to DynamoDBData struct
 	data := models.DynamoDBData{
 		ID:                id,
 		Ami:               req.Ami,
 		ServerSize:        req.ServerSize,
-		Hostname:          req.Hostname,
+		Hostname:          hostname,
 		Region:            req.Region,
 		CreationUser:      req.CreationUser,
 		Lifecycle:         req.Lifecycle,
