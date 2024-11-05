@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -231,49 +232,69 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
-func GetAvailableAmis(amilist []string, filterMap map[string][]types.Filter) ([]string, error) {
-	for _, filter := range filterMap {
-		imageResult, err := getImage(filter)
-		if err != nil {
-			log.Printf("failed to retrieve images: %v", err)
-		}
+func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Filter) ([]models.AmiAttr, error) {
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
 
-		// if it exists grab it
-		if len(imageResult.Images) == 0 {
-			log.Printf("No images returned for extra listing")
-		} else {
-			// sort the images found by creation date
-			sort.Slice(imageResult.Images, func(i, j int) bool {
-				timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
-				timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
-				return timeI.After(timeJ) // For descending order (newest first)
-			})
-			for i := range imageResult.Images {
-				image := imageResult.Images[i]
-				log.Printf("Image %s found, appending to the list...", *image.ImageId)
-				amilist = append(amilist, *image.ImageId)
+	for _, filter := range filterMap {
+		wg.Add(1)
+		go func(fil []types.Filter) {
+			defer wg.Done()
+
+			imageResult, err := getImage(fil)
+			if err != nil {
+				log.Printf("failed to retrieve images: %v", err)
 			}
-		}
+
+			// if it exists grab it
+			if len(imageResult.Images) == 0 {
+				log.Printf("No images returned for extra listing")
+			} else {
+				// sort the images found by creation date
+				sort.Slice(imageResult.Images, func(i, j int) bool {
+					timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
+					timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
+					return timeI.After(timeJ) // For descending order (newest first)
+				})
+				mutex.Lock()
+				for _, image := range imageResult.Images {
+					amiAttr := models.AmiAttr{
+						AmiID:   *image.ImageId,
+						AmiName: *image.Name,
+					}
+					amilist = append(amilist, amiAttr)
+				}
+				defer mutex.Unlock()
+			}
+		}(filter)
 	}
 
+	wg.Wait()
 	return amilist, nil
 }
 
+// don't have to assign a mutex since it will write to its own index
 func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
-	for i := range ami {
-		filter := []types.Filter{
-			{
-				Name:   aws.String("image-id"),
-				Values: []string{ami[i].AmiID},
-			},
-		}
+	var wg sync.WaitGroup
 
-		imageResult, err := getImage(filter)
-		if err != nil {
-			log.Printf("failed to retrieve images: %v", err)
-		}
+	for index := range ami {
+		wg.Add(1)
 
-		ami[i].AmiName = *imageResult.Images[0].Name
+		go func(i int) {
+			filter := []types.Filter{
+				{
+					Name:   aws.String("image-id"),
+					Values: []string{ami[i].AmiID},
+				},
+			}
+
+			imageResult, err := getImage(filter)
+			if err != nil {
+				log.Printf("failed to retrieve images: %v", err)
+			}
+
+			ami[i].AmiName = *imageResult.Images[0].Name
+		}(index)
 	}
 
 	return ami
