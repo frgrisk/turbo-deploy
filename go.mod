@@ -1,7 +1,8 @@
 module github.com/frgrisk/turbo-deploy
 
-go 1.22.1
-toolchain go1.23.7
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	github.com/aws/aws-lambda-go v1.47.0
