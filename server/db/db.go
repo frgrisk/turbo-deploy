@@ -33,7 +33,7 @@ func init() {
 	client = dynamodb.NewFromConfig(cfg)
 }
 
-var ErrHostnameExists = errors.New("Hostname already exists")
+var ErrHostnameExists = errors.New("hostname already exists")
 
 func SaveRecord(inputStruc models.DynamoDBData) (string, error) {
 	exists, err := hostnameExists(inputStruc.Hostname)

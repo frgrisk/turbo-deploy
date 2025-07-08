@@ -20,7 +20,7 @@ import (
 	"github.com/frgrisk/turbo-deploy/server/decode"
 	"github.com/frgrisk/turbo-deploy/server/instance"
 	"github.com/frgrisk/turbo-deploy/server/models"
-	"github.com/frgrisk/turbo-deploy/server/util"
+	"github.com/frgrisk/turbo-deploy/server/timeutil"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -115,7 +115,7 @@ func CreateInstanceRequest(c *gin.Context) {
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
-		ttl, err := util.CalculateTTL(req.TTLValue, req.TTLUnit)
+		ttl, err := timeutil.CalculateTTL(req.TTLValue, req.TTLUnit)
 		if err != nil {
 			log.Printf("Failed to calculate TTL: %v", err)
 			return
@@ -188,7 +188,7 @@ func UpdateInstanceRequest(c *gin.Context) {
 	}
 
 	if req.TTLValue > 0 && req.TTLUnit != "" {
-		ttl, err := util.CalculateTTL(req.TTLValue, req.TTLUnit)
+		ttl, err := timeutil.CalculateTTL(req.TTLValue, req.TTLUnit)
 		if err != nil {
 			log.Printf("Failed to calculate TTL: %v", err)
 			return
