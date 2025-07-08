@@ -1,24 +1,35 @@
-run:
-  skip-files:
-
+version: "2"
 linters:
   enable:
-    - staticcheck
-    - revive
-    - gofmt
-    - tenv
-    - misspell
     - asciicheck
     - gocritic
     - gosec
-    - gofumpt
+    - misspell
+    - revive
     - unconvert
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - shadow
-
-output:
-  formats: github-actions
+  settings:
+    govet:
+      disable:
+        - shadow
+      enable-all: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
