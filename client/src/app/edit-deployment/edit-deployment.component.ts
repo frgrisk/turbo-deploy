@@ -82,7 +82,7 @@ export class EditDeploymentComponent {
       )
       .subscribe((response: any) => {
         this.editDeploymentForm.reset({}, { emitEvent: false });
-        this.editDeploymentForm.patchValue({
+        (this.editDeploymentForm.patchValue({
           id: response.ID,
           hostname: response.Hostname,
           region: response.Region,
@@ -90,7 +90,7 @@ export class EditDeploymentComponent {
           serverSize: response.ServerSize,
           lifecycle: response.Lifecycle,
         }),
-          { emitEvent: false };
+          { emitEvent: false });
         this.currentExpiry = convertDateTime(response.TimeToExpire);
       });
   }
