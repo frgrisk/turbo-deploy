@@ -9,4 +9,5 @@ export class DeploymentApiResponse {
   lifecycle!: string;
   status!: string;
   timeToExpire!: string;
+  userData!: string[];
 }

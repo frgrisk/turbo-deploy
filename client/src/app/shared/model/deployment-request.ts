@@ -11,4 +11,5 @@ export class DeploymentApiRequest {
   ttlValue?: number;
   ttlUnit?: string;
   timeToExpire?: number;
+  userData?: string[];
 }

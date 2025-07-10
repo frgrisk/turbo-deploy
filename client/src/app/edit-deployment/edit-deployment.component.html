@@ -53,6 +53,14 @@
                   }}</mat-option>
                 </mat-select>
               </mat-form-field>
+              <mat-form-field floatLabel="always" appearance="outline">
+                <mat-label>User Data Script</mat-label>
+                <mat-select formControlName="userData" multiple>
+                  <mat-option *ngFor="let user of userData" [value]="user">{{
+                    user
+                  }}</mat-option>
+                </mat-select>
+              </mat-form-field>
             </div>
           </div>
           <div>

@@ -19,6 +19,7 @@ export class CreateDeploymentComponent implements OnInit {
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
   amis: AmiAttr[] = [];
+  userData: string[] = [];
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
@@ -36,11 +37,15 @@ export class CreateDeploymentComponent implements OnInit {
 
   initializeForm() {
     this.deploymentForm = new FormGroup({
-      hostname: new FormControl('', [Validators.required]),
+      hostname: new FormControl('', [
+        Validators.required,
+        Validators.pattern('[a-zA-Z0-9-_]*'),
+      ]),
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [Validators.required]),
       serverSize: new FormControl('', [Validators.required]),
-      lifecycle: new FormControl(Lifecycle.ON_DEMAND, [Validators.required]),
+      userData: new FormControl([]),
+      lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
       ttlValue: new FormControl('', [Validators.min(1)]),
       ttlUnit: new FormControl(''),
     });
@@ -67,6 +72,7 @@ export class CreateDeploymentComponent implements OnInit {
       this.serverSizes = data.serverSizes;
       this.amis = data.amis;
       this.region = data.regions;
+      this.userData = data.userData;
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0].amiIds);
       this.deploymentForm.get('region')?.patchValue(this.region);
@@ -86,6 +92,7 @@ export class CreateDeploymentComponent implements OnInit {
       ami: form.ami,
       serverSize: form.serverSize,
       lifecycle: form.lifecycle,
+      userData: form.userData,
     };
 
     const ttlValue = this.deploymentForm.get('ttlValue')?.value;
