@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
@@ -43,7 +43,7 @@ export class EditDeploymentComponent {
       id: new FormControl(''),
       hostname: new FormControl('', [
         Validators.required,
-        Validators.pattern('[a-zA-Z0-9]*'),
+        Validators.pattern('[a-zA-Z0-9-_]*'),
       ]),
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [Validators.required]),
