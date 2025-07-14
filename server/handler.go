@@ -294,13 +294,13 @@ func GetAWSData(c *gin.Context) {
 
 	// Remove empty strings from the Ami config and add any amis to amilist
 	var amilist []models.AmiAttr
-    for _, ami := range tempConfig.Ami {
-        if ami != "" {
-            amiID := models.AmiAttr{
-		AmiID: ami,
-	    }
-	    amilist = append(amilist, amiID)
-        }
+	for _, ami := range tempConfig.Ami {
+		if ami != "" {
+			amiID := models.AmiAttr{
+				AmiID: ami,
+			}
+			amilist = append(amilist, amiID)
+		}
 	}
 
 	amilist = instance.GetAMIName(amilist)
