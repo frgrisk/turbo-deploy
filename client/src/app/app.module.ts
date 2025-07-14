@@ -13,7 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AppRoutingModule } from './app-routing.module';
 import { CreateDeploymentComponent } from './create-deployment/create-deployment.component';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -21,32 +21,25 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EditDeploymentComponent } from './edit-deployment/edit-deployment.component';
 import { MatDialogModule } from '@angular/material/dialog';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    DeploymentDashboardComponent,
-    CreateDeploymentComponent,
-    EditDeploymentComponent,
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatTableModule,
-    MatInputModule,
-    MatFormFieldModule,
-    AppRoutingModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    MatSelectModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        DeploymentDashboardComponent,
+        CreateDeploymentComponent,
+        EditDeploymentComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        BrowserAnimationsModule,
+        MatToolbarModule,
+        MatButtonModule,
+        MatIconModule,
+        MatCardModule,
+        MatTableModule,
+        MatInputModule,
+        MatFormFieldModule,
+        AppRoutingModule,
+        ReactiveFormsModule,
+        MatSelectModule,
+        MatProgressBarModule,
+        MatProgressSpinnerModule,
+        MatDialogModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule {}
