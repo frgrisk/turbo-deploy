@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/frgrisk/turbo-deploy/server/models"
+	"golang.org/x/sync/errgroup"
 )
 
 var ec2Client *ec2.Client
@@ -279,30 +280,30 @@ func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Fil
 	return amilist, nil
 }
 
-// don't have to assign a mutex since it will write to its own index
+// GetAMIName assigns names to AMI attributes by fetching the image details from AWS
+// using the AMI IDs provided in the ami slice. It uses goroutines to fetch names
+// concurrently for each AMI ID, improving performance when dealing with multiple AMIs.
 func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
-	var wg sync.WaitGroup
-
+	g := new(errgroup.Group)
 	for index := range ami {
-		wg.Add(1)
-
-		go func(i int) {
+		i := index
+		g.Go(func() error {
 			filter := []types.Filter{
 				{
 					Name:   aws.String("image-id"),
 					Values: []string{ami[i].AmiID},
 				},
 			}
-
 			imageResult, err := getImage(filter)
-			if err != nil {
-				log.Printf("failed to retrieve images: %v", err)
+			if err == nil {
+				ami[i].AmiName = *imageResult.Images[0].Name
 			}
-
-			ami[i].AmiName = *imageResult.Images[0].Name
-		}(index)
+			return err
+		})
 	}
-
+	if err := g.Wait(); err == nil {
+		log.Printf("Successfully retrieved AMI names")
+	}
 	return ami
 }
 
