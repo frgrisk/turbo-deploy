@@ -1,18 +1,38 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Subject, take, takeUntil } from 'rxjs';
+
 import { ApiService } from '../shared/services/api.service';
 import { DeploymentApiResponse } from '../shared/model/deployment-response';
 import { EC2Status } from '../shared/enum/ec2-status.enum';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
 import { DeploymentsService } from '../shared/services/deployments.service';
 import { convertDateTime } from '../shared/util/time.util';
-import { Subject, take, takeUntil } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { SnapshotConfirmationDialogComponent } from '../shared/components/snapshot-confirmation-dialog/snapshot-confirmation-dialog.component';
 
 @Component({
   selector: 'app-deployment-dashboard',
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatTableModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatProgressBarModule,
+  ],
   templateUrl: './deployment-dashboard.component.html',
   styleUrls: ['./deployment-dashboard.component.scss'],
 })
@@ -46,6 +66,7 @@ export class DeploymentDashboardComponent {
     { key: 'timeToExpire', header: 'Expiry' },
     { key: 'action', header: 'Action' },
   ];
+
   constructor(
     public apiService: ApiService,
     private router: Router,
@@ -53,6 +74,7 @@ export class DeploymentDashboardComponent {
     private deploymentService: DeploymentsService,
     public dialog: MatDialog,
   ) {}
+
   ngOnInit() {
     this.initializeDeployedInstances();
   }
@@ -143,6 +165,7 @@ export class DeploymentDashboardComponent {
       this.pollInstanceStatus(element.ec2InstanceId, 'stopped', 10000);
     });
   }
+
   pollInstanceStatus(
     instanceId: string,
     targetStatus: string,
