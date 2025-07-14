@@ -303,7 +303,12 @@ func GetAWSData(c *gin.Context) {
 		}
 	}
 
-	amilist = instance.GetAMIName(amilist)
+	amilist, err = instance.GetAMIName(amilist)
+	if err != nil {
+		log.Printf("Failed to get AMI names: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	decodedFilter, _ := decode.Base64Gzip(filterEnv)
 
@@ -336,7 +341,8 @@ func GetAWSData(c *gin.Context) {
 	// add the amis retrieved based on filters given
 	amilist, err = instance.GetAvailableAmis(amilist, filterMap)
 	if err != nil {
-		log.Printf("Failed to get list of AMIs: %v", err)
+		log.Printf("Error retrieving available AMIs: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 

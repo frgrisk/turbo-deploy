@@ -240,17 +240,16 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 }
 
 func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Filter) ([]models.AmiAttr, error) {
-	var wg sync.WaitGroup
+	g := new(errgroup.Group)
 	var mutex sync.Mutex
 
 	for _, filter := range filterMap {
-		wg.Add(1)
-		go func(fil []types.Filter) {
-			defer wg.Done()
-
-			imageResult, err := getImage(fil)
+		f := filter
+		g.Go(func() error {
+			imageResult, err := getImage(f)
 			if err != nil {
 				log.Printf("failed to retrieve images: %v", err)
+				return err
 			}
 
 			// if it exists grab it
@@ -273,17 +272,21 @@ func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Fil
 				}
 				defer mutex.Unlock()
 			}
-		}(filter)
+			return err
+		})
+	}
+	if err := g.Wait(); err != nil {
+		log.Printf("Failed to get available AMIs: %v", err)
+		return nil, err
 	}
 
-	wg.Wait()
 	return amilist, nil
 }
 
 // GetAMIName assigns names to AMI attributes by fetching the image details from AWS
 // using the AMI IDs provided in the ami slice. It uses goroutines to fetch names
 // concurrently for each AMI ID, improving performance when dealing with multiple AMIs.
-func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
+func GetAMIName(ami []models.AmiAttr) ([]models.AmiAttr, error) {
 	g := new(errgroup.Group)
 	for index := range ami {
 		i := index
@@ -301,10 +304,11 @@ func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
 			return err
 		})
 	}
-	if err := g.Wait(); err == nil {
-		log.Printf("Successfully retrieved AMI names")
+	if err := g.Wait(); err != nil {
+		log.Printf("Failed to get AMI names: %v", err)
+		return nil, err
 	}
-	return ami
+	return ami, nil
 }
 
 func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
