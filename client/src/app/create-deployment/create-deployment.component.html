@@ -7,7 +7,7 @@
           routerLink=""
           mat-icon-button
           aria-label="Back to home"
-          >
+        >
           <mat-icon>keyboard_arrow_left</mat-icon>
         </button>
         <mat-card-title-group>
@@ -17,7 +17,7 @@
       </mat-card-header>
       <mat-card-content
         style="padding: 32px; display: flex; flex-direction: column; gap: 4px"
-        >
+      >
         @if (!apiService.formAWSDataLoading()) {
           <div>
             <div>
@@ -44,115 +44,109 @@
                     @for (ami of amis; track ami) {
                       <mat-option [value]="ami.amiIds"
                         >({{ ami.amiIds }}) {{ ami.amiNames }}</mat-option
-                        >
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field floatLabel="always" appearance="outline">
-                    <mat-label>Server Size</mat-label>
-                    <mat-select formControlName="serverSize">
-                      @for (size of serverSizes; track size) {
-                        <mat-option [value]="size">{{
-                          size
-                        }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field floatLabel="always" appearance="outline">
-                    <mat-label>User Data Script</mat-label>
-                    <mat-select formControlName="userData" multiple>
-                      @for (user of userData; track user) {
-                        <mat-option [value]="user">{{
-                          user
-                        }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                </div>
+                      >
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field floatLabel="always" appearance="outline">
+                  <mat-label>Server Size</mat-label>
+                  <mat-select formControlName="serverSize">
+                    @for (size of serverSizes; track size) {
+                      <mat-option [value]="size">{{ size }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field floatLabel="always" appearance="outline">
+                  <mat-label>User Data Script</mat-label>
+                  <mat-select formControlName="userData" multiple>
+                    @for (user of userData; track user) {
+                      <mat-option [value]="user">{{ user }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
               </div>
-              <div>
-                <p>Deployment Settings</p>
-                <div style="display: flex; flex-direction: row; gap: 24px">
-                  <mat-form-field
-                    style="flex: 1"
-                    floatLabel="always"
-                    appearance="outline"
-                    >
-                    <mat-label>Lifecycle</mat-label>
-                    <mat-select formControlName="lifecycle">
-                      @for (lifecycle of lifecycles; track lifecycle) {
-                        <mat-option
-                          [value]="lifecycle.toLowerCase()"
-                          >{{ lifecycle }}</mat-option
-                          >
-                        }
-                      </mat-select>
-                    </mat-form-field>
-                  </div>
-                </div>
-                <div>
-                  <div
-                    style="display: flex; flex-direction: row; align-items: center"
-                    >
-                    <p style="margin: 0px">Expiry (TTL) Settings (Optional)</p>
-                    <button
-                      style="transform: scale(0.9)"
-                      (click)="resetExpiryForm()"
-                      mat-icon-button
-                      aria-label="Back to home"
-                      >
-                      <mat-icon>undo</mat-icon>
-                    </button>
-                  </div>
-                  <div style="display: flex; flex-direction: row; gap: 24px">
-                    <mat-form-field
-                      style="flex: 1"
-                      floatLabel="always"
-                      appearance="outline"
-                      >
-                      <mat-label>Duration of Reservation </mat-label>
-                      <input
-                        type="number"
-                        formControlName="ttlValue"
-                        matInput
-                        placeholder=""
-                        />
-                    </mat-form-field>
-                    <mat-form-field
-                      style="flex: 2"
-                      floatLabel="always"
-                      appearance="outline"
-                      >
-                      <mat-label>Unit</mat-label>
-                      <mat-select formControlName="ttlUnit">
-                        @for (ttlUnit of ttlUnits; track ttlUnit) {
-                          <mat-option
-                            [value]="ttlUnit.toLowerCase()"
-                            >{{ ttlUnit }}(s)</mat-option
-                            >
-                          }
-                        </mat-select>
-                      </mat-form-field>
-                    </div>
-                  </div>
-                </div>
-              } @else {
-                <div class="spinner-container">
-                  <mat-spinner></mat-spinner>
-                </div>
-              }
-            </mat-card-content>
-            <mat-card-actions style="display: flex; padding: 32px; padding-top: 0px">
-              <div style="flex: 1"></div>
-              <button
-                mat-flat-button
-                (click)="submitForm()"
-                [disabled]="!deploymentForm.valid"
-                color="primary"
+            </div>
+            <div>
+              <p>Deployment Settings</p>
+              <div style="display: flex; flex-direction: row; gap: 24px">
+                <mat-form-field
+                  style="flex: 1"
+                  floatLabel="always"
+                  appearance="outline"
                 >
-                Deploy
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </form>
+                  <mat-label>Lifecycle</mat-label>
+                  <mat-select formControlName="lifecycle">
+                    @for (lifecycle of lifecycles; track lifecycle) {
+                      <mat-option [value]="lifecycle.toLowerCase()">{{
+                        lifecycle
+                      }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div>
+              <div
+                style="display: flex; flex-direction: row; align-items: center"
+              >
+                <p style="margin: 0px">Expiry (TTL) Settings (Optional)</p>
+                <button
+                  style="transform: scale(0.9)"
+                  (click)="resetExpiryForm()"
+                  mat-icon-button
+                  aria-label="Back to home"
+                >
+                  <mat-icon>undo</mat-icon>
+                </button>
+              </div>
+              <div style="display: flex; flex-direction: row; gap: 24px">
+                <mat-form-field
+                  style="flex: 1"
+                  floatLabel="always"
+                  appearance="outline"
+                >
+                  <mat-label>Duration of Reservation </mat-label>
+                  <input
+                    type="number"
+                    formControlName="ttlValue"
+                    matInput
+                    placeholder=""
+                  />
+                </mat-form-field>
+                <mat-form-field
+                  style="flex: 2"
+                  floatLabel="always"
+                  appearance="outline"
+                >
+                  <mat-label>Unit</mat-label>
+                  <mat-select formControlName="ttlUnit">
+                    @for (ttlUnit of ttlUnits; track ttlUnit) {
+                      <mat-option [value]="ttlUnit.toLowerCase()"
+                        >{{ ttlUnit }}(s)</mat-option
+                      >
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="spinner-container">
+            <mat-spinner></mat-spinner>
+          </div>
+        }
+      </mat-card-content>
+      <mat-card-actions style="display: flex; padding: 32px; padding-top: 0px">
+        <div style="flex: 1"></div>
+        <button
+          mat-flat-button
+          (click)="submitForm()"
+          [disabled]="!deploymentForm.valid"
+          color="primary"
+        >
+          Deploy
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</form>

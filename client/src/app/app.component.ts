@@ -6,14 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    RouterOutlet,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [RouterOutlet, MatToolbarModule, MatButtonModule, MatIconModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
   title = 'turbo-deploy';

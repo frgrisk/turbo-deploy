@@ -5,175 +5,171 @@
         <mat-card-title>Deployment Management</mat-card-title>
         <mat-card-subtitle
           >Explore and manage your deployments here</mat-card-subtitle
-          >
-          <div style="flex: 1"></div>
-          <button (click)="refresh()" mat-icon-button aria-label="Refresh">
-            <mat-icon>refresh</mat-icon>
-          </button>
-          <button mat-flat-button color="primary" routerLink="/create">
-            <span>New Deployment</span>
-            <mat-icon>add</mat-icon>
-          </button>
-        </mat-card-title-group>
-      </mat-card-header>
-      <mat-card-content style="padding: 24px">
-        <table mat-table [dataSource]="dataSource" class="mat-elevation-z2">
-          @for (column of columnsToDisplay; track column) {
-            @if (column.key === 'status') {
+        >
+        <div style="flex: 1"></div>
+        <button (click)="refresh()" mat-icon-button aria-label="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button mat-flat-button color="primary" routerLink="/create">
+          <span>New Deployment</span>
+          <mat-icon>add</mat-icon>
+        </button>
+      </mat-card-title-group>
+    </mat-card-header>
+    <mat-card-content style="padding: 24px">
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z2">
+        @for (column of columnsToDisplay; track column) {
+          @if (column.key === "status") {
+            <ng-container matColumnDef="{{ column.key }}">
+              <th class="header" mat-header-cell *matHeaderCellDef>
+                {{ column.header }}
+              </th>
+              <td mat-cell *matCellDef="let element">
+                <div class="align-with-icon">
+                  <mat-icon
+                    [ngStyle]="{
+                      color: getBackgroundColor(element[column.key]),
+                    }"
+                    >{{ getMatIcon(element[column.key]) }}</mat-icon
+                  >
+                  <span>{{ element[column.key] }}</span>
+                </div>
+              </td>
+            </ng-container>
+          } @else {
+            @if (column.key === "action") {
               <ng-container matColumnDef="{{ column.key }}">
                 <th class="header" mat-header-cell *matHeaderCellDef>
                   {{ column.header }}
                 </th>
                 <td mat-cell *matCellDef="let element">
-                  <div class="align-with-icon">
-                    <mat-icon
-                    [ngStyle]="{
-                      color: getBackgroundColor(element[column.key]),
-                    }"
-                      >{{ getMatIcon(element[column.key]) }}</mat-icon
-                      >
-                      <span>{{ element[column.key] }}</span>
-                    </div>
-                  </td>
-                </ng-container>
-              } @else {
-                @if (column.key === 'action') {
-                  <ng-container matColumnDef="{{ column.key }}">
-                    <th class="header" mat-header-cell *matHeaderCellDef>
-                      {{ column.header }}
-                    </th>
-                    <td mat-cell *matCellDef="let element">
-                      @switch (element.status) {
-                        @case ('running') {
-                          @if (!element.loading) {
-                            <button
-                              [disabled]="currentlyPolling"
-                              (click)="stopInstance(element)"
-                              mat-icon-button
-                              class="action-button"
-                              mat-tooltip="Stop this instance"
-                              aria-label="Stop instance"
-                              >
-                              <mat-icon
+                  @switch (element.status) {
+                    @case ("running") {
+                      @if (!element.loading) {
+                        <button
+                          [disabled]="currentlyPolling"
+                          (click)="stopInstance(element)"
+                          mat-icon-button
+                          class="action-button"
+                          mat-tooltip="Stop this instance"
+                          aria-label="Stop instance"
+                        >
+                          <mat-icon
                             [ngClass]="
                               currentlyPolling
                                 ? 'disabled-button'
                                 : 'stop-button'
                             "
-                                >square</mat-icon
-                                >
-                              </button>
-                            }
-                            @if (element.loading) {
-                              <div class="spinner-container">
-                                @if (element.loading) {
-                                  <mat-spinner
-                                    diameter="24"
-                                  ></mat-spinner>
-                                }
-                              </div>
-                            }
+                            >square</mat-icon
+                          >
+                        </button>
+                      }
+                      @if (element.loading) {
+                        <div class="spinner-container">
+                          @if (element.loading) {
+                            <mat-spinner diameter="24"></mat-spinner>
                           }
-                          @case ('stopped') {
-                            @if (!element.loading) {
-                              <button
-                                [disabled]="currentlyPolling"
-                                (click)="startInstance(element)"
-                                mat-icon-button
-                                class="action-button"
-                                mat-tooltip="Start this instance"
-                                aria-label="Start instance"
-                                >
-                                <mat-icon
+                        </div>
+                      }
+                    }
+                    @case ("stopped") {
+                      @if (!element.loading) {
+                        <button
+                          [disabled]="currentlyPolling"
+                          (click)="startInstance(element)"
+                          mat-icon-button
+                          class="action-button"
+                          mat-tooltip="Start this instance"
+                          aria-label="Start instance"
+                        >
+                          <mat-icon
                             [ngClass]="
                               currentlyPolling
                                 ? 'disabled-button'
                                 : 'start-button'
                             "
-                                  >play_arrow</mat-icon
-                                  >
-                                </button>
-                              }
-                              @if (element.loading) {
-                                <div class="spinner-container">
-                                  <mat-spinner diameter="24"></mat-spinner>
-                                </div>
-                              }
-                            }
-                            @default {
-                              <div class="spinner-container">
-                                <mat-spinner diameter="24"></mat-spinner>
-                              </div>
-                            }
-                          }
-                          <button
-                            (click)="editInstance(element.deploymentId)"
-                            color="primary"
-                            mat-icon-button
-                            aria-label="Refresh"
-                            >
-                            <mat-icon>edit</mat-icon>
-                          </button>
-                          <button
-                            (click)="deleteInstance(element.deploymentId)"
-                            color="warn"
-                            mat-icon-button
-                            aria-label="Refresh"
-                            >
-                            <mat-icon>delete</mat-icon>
-                          </button>
-                          <button
-                            (click)="openSnapshotModal(element)"
-                            mat-icon-button
-                            aria-label="Capture Snapshot"
-                            >
-                            <mat-icon>camera_alt</mat-icon>
-                          </button>
-                        </td>
-                      </ng-container>
-                    } @else {
-                      @if (column.key === 'timeToExpire') {
-                        <ng-container matColumnDef="{{ column.key }}">
-                          <th class="header" mat-header-cell *matHeaderCellDef>
-                            {{ column.header }}
-                          </th>
-                          <td mat-cell *matCellDef="let element">
-                            {{ convertDateTime(element[column.key]) }}
-                          </td>
-                        </ng-container>
-                      } @else {
-                        <ng-container matColumnDef="{{ column.key }}">
-                          <th class="header" mat-header-cell *matHeaderCellDef>
-                            {{ column.header }}
-                          </th>
-                          <td mat-cell *matCellDef="let element">
-                            {{ element[column.key] }}
-                          </td>
-                        </ng-container>
+                            >play_arrow</mat-icon
+                          >
+                        </button>
+                      }
+                      @if (element.loading) {
+                        <div class="spinner-container">
+                          <mat-spinner diameter="24"></mat-spinner>
+                        </div>
                       }
                     }
-                  }
-                }
-
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-                <tr *matNoDataRow class="mat-row">
-                  <td class="mat-cell" colspan="6">
-                    @if (!apiService.tableLoading()) {
-                      <div
-                        style="display: flex; justify-content: center; margin: 12px"
-                        >
-                        No deployed instances found.
+                    @default {
+                      <div class="spinner-container">
+                        <mat-spinner diameter="24"></mat-spinner>
                       </div>
                     }
+                  }
+                  <button
+                    (click)="editInstance(element.deploymentId)"
+                    color="primary"
+                    mat-icon-button
+                    aria-label="Refresh"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    (click)="deleteInstance(element.deploymentId)"
+                    color="warn"
+                    mat-icon-button
+                    aria-label="Refresh"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button
+                    (click)="openSnapshotModal(element)"
+                    mat-icon-button
+                    aria-label="Capture Snapshot"
+                  >
+                    <mat-icon>camera_alt</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+            } @else {
+              @if (column.key === "timeToExpire") {
+                <ng-container matColumnDef="{{ column.key }}">
+                  <th class="header" mat-header-cell *matHeaderCellDef>
+                    {{ column.header }}
+                  </th>
+                  <td mat-cell *matCellDef="let element">
+                    {{ convertDateTime(element[column.key]) }}
                   </td>
-                </tr>
-              </table>
-              @if (apiService.tableLoading()) {
-                <div>
-                  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                </div>
+                </ng-container>
+              } @else {
+                <ng-container matColumnDef="{{ column.key }}">
+                  <th class="header" mat-header-cell *matHeaderCellDef>
+                    {{ column.header }}
+                  </th>
+                  <td mat-cell *matCellDef="let element">
+                    {{ element[column.key] }}
+                  </td>
+                </ng-container>
               }
-            </mat-card-content>
-          </mat-card>
+            }
+          }
+        }
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr *matNoDataRow class="mat-row">
+          <td class="mat-cell" colspan="6">
+            @if (!apiService.tableLoading()) {
+              <div style="display: flex; justify-content: center; margin: 12px">
+                No deployed instances found.
+              </div>
+            }
+          </td>
+        </tr>
+      </table>
+      @if (apiService.tableLoading()) {
+        <div>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

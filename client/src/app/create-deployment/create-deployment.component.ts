@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,7 +22,6 @@ import { ApiService } from '../shared/services/api.service';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { convertToHours } from '../shared/util/time.util';
-
 
 @Component({
   selector: 'app-create-deployment',
