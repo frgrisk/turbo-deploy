@@ -292,15 +292,23 @@ func GetAWSData(c *gin.Context) {
 		return
 	}
 
-	// Remove empty strings from the Ami config
-	i := 0
+	// Remove empty strings from the Ami config and add any amis to amilist
+	var amilist []models.AmiAttr
 	for _, ami := range tempConfig.Ami {
 		if ami != "" {
-			tempConfig.Ami[i] = ami
-			i++
+			amiID := models.AmiAttr{
+				AmiID: ami,
+			}
+			amilist = append(amilist, amiID)
 		}
 	}
-	tempConfig.Ami = tempConfig.Ami[:i]
+
+	amilist, err = instance.GetAMIName(amilist)
+	if err != nil {
+		log.Printf("Failed to get AMI names: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
+	}
 
 	decodedFilter, _ := decode.Base64Gzip(filterEnv)
 
@@ -331,27 +339,16 @@ func GetAWSData(c *gin.Context) {
 	}
 
 	// add the amis retrieved based on filters given
-	tempConfig.Ami, err = instance.GetAvailableAmis(tempConfig.Ami, filterMap)
+	amilist, err = instance.GetAvailableAmis(amilist, filterMap)
 	if err != nil {
-		log.Printf("Failed to get list of AMIs: %v", err)
+		log.Printf("Error retrieving available AMIs: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	// get the names of the ami
-	m := []models.AmiAttr{}
-	for _, id := range tempConfig.Ami {
-		ami := models.AmiAttr{
-			AmiID:   id,
-			AmiName: "",
-		}
-		m = append(m, ami)
-	}
-
-	m = instance.GetAMIName(m)
-
 	config.Region = regionEnv
 	config.ServerSizes = tempConfig.ServerSizes
-	config.Ami = m
+	config.Ami = amilist
 
 	c.JSON(http.StatusOK, config)
 }

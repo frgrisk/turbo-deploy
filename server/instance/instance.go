@@ -6,6 +6,7 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/frgrisk/turbo-deploy/server/models"
+	"golang.org/x/sync/errgroup"
 )
 
 var ec2Client *ec2.Client
@@ -237,52 +239,76 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
-func GetAvailableAmis(amilist []string, filterMap map[string][]types.Filter) ([]string, error) {
-	for _, filter := range filterMap {
-		imageResult, err := getImage(filter)
-		if err != nil {
-			log.Printf("failed to retrieve images: %v", err)
-		}
+func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Filter) ([]models.AmiAttr, error) {
+	g := new(errgroup.Group)
+	var mutex sync.Mutex
 
-		// if it exists grab it
-		if len(imageResult.Images) == 0 {
-			log.Printf("No images returned for extra listing")
-		} else {
-			// sort the images found by creation date
-			sort.Slice(imageResult.Images, func(i, j int) bool {
-				timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
-				timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
-				return timeI.After(timeJ) // For descending order (newest first)
-			})
-			for i := range imageResult.Images {
-				image := imageResult.Images[i]
-				log.Printf("Image %s found, appending to the list...", *image.ImageId)
-				amilist = append(amilist, *image.ImageId)
+	for _, filter := range filterMap {
+		f := filter
+		g.Go(func() error {
+			imageResult, err := getImage(f)
+			if err != nil {
+				log.Printf("failed to retrieve images: %v", err)
+				return err
 			}
-		}
+
+			// if it exists grab it
+			if len(imageResult.Images) == 0 {
+				log.Printf("No images returned for extra listing")
+			} else {
+				// sort the images found by creation date
+				sort.Slice(imageResult.Images, func(i, j int) bool {
+					timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
+					timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
+					return timeI.After(timeJ) // For descending order (newest first)
+				})
+				mutex.Lock()
+				for _, image := range imageResult.Images {
+					amiAttr := models.AmiAttr{
+						AmiID:   *image.ImageId,
+						AmiName: *image.Name,
+					}
+					amilist = append(amilist, amiAttr)
+				}
+				defer mutex.Unlock()
+			}
+			return err
+		})
+	}
+	if err := g.Wait(); err != nil {
+		log.Printf("Failed to get available AMIs: %v", err)
+		return nil, err
 	}
 
 	return amilist, nil
 }
 
-func GetAMIName(ami []models.AmiAttr) []models.AmiAttr {
-	for i := range ami {
-		filter := []types.Filter{
-			{
-				Name:   aws.String("image-id"),
-				Values: []string{ami[i].AmiID},
-			},
-		}
-
-		imageResult, err := getImage(filter)
-		if err != nil {
-			log.Printf("failed to retrieve images: %v", err)
-		}
-
-		ami[i].AmiName = *imageResult.Images[0].Name
+// GetAMIName assigns names to AMI attributes by fetching the image details from AWS
+// using the AMI IDs provided in the ami slice. It uses goroutines to fetch names
+// concurrently for each AMI ID, improving performance when dealing with multiple AMIs.
+func GetAMIName(ami []models.AmiAttr) ([]models.AmiAttr, error) {
+	g := new(errgroup.Group)
+	for index := range ami {
+		i := index
+		g.Go(func() error {
+			filter := []types.Filter{
+				{
+					Name:   aws.String("image-id"),
+					Values: []string{ami[i].AmiID},
+				},
+			}
+			imageResult, err := getImage(filter)
+			if err == nil {
+				ami[i].AmiName = *imageResult.Images[0].Name
+			}
+			return err
+		})
 	}
-
-	return ami
+	if err := g.Wait(); err != nil {
+		log.Printf("Failed to get AMI names: %v", err)
+		return nil, err
+	}
+	return ami, nil
 }
 
 func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
