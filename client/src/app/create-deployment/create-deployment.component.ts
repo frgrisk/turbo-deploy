@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
   FormControl,
@@ -26,7 +25,6 @@ import { convertToHours } from '../shared/util/time.util';
 @Component({
   selector: 'app-create-deployment',
   imports: [
-    CommonModule,
     RouterModule,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -44,6 +42,20 @@ import { convertToHours } from '../shared/util/time.util';
 })
 export class CreateDeploymentComponent implements OnInit {
   private ngUnsubscribe = new Subject<void>();
+
+  private numericValidator(control: any) {
+    const value = control.value;
+    if (!value) return null;
+
+    if (
+      isNaN(value) ||
+      !Number.isInteger(Number(value)) ||
+      Number(value) <= 0
+    ) {
+      return { numeric: true };
+    }
+    return null;
+  }
 
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
@@ -75,7 +87,7 @@ export class CreateDeploymentComponent implements OnInit {
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
       lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
-      ttlValue: new FormControl('', [Validators.min(1)]),
+      ttlValue: new FormControl('', [Validators.min(1), this.numericValidator]),
       ttlUnit: new FormControl(''),
     });
 
@@ -149,5 +161,45 @@ export class CreateDeploymentComponent implements OnInit {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    const key = event.key;
+
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+    ];
+
+    if (
+      event.ctrlKey &&
+      ['a', 'c', 'v', 'x', 'z'].includes(key.toLowerCase())
+    ) {
+      return;
+    }
+
+    if (allowedKeys.includes(key)) {
+      return;
+    }
+
+    if (!/^[0-9]$/.test(key)) {
+      event.preventDefault();
+    }
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    const clipboardData = event.clipboardData;
+    const pastedText = clipboardData?.getData('text');
+
+    if (pastedText && !/^\d+$/.test(pastedText)) {
+      event.preventDefault();
+    }
   }
 }
