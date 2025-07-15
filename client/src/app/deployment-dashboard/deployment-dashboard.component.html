@@ -18,8 +18,8 @@
     </mat-card-header>
     <mat-card-content style="padding: 24px">
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z2">
-        <ng-container *ngFor="let column of columnsToDisplay">
-          <ng-container *ngIf="column.key === 'status'; else actionColumn">
+        @for (column of columnsToDisplay; track column) {
+          @if (column.key === "status") {
             <ng-container matColumnDef="{{ column.key }}">
               <th class="header" mat-header-cell *matHeaderCellDef>
                 {{ column.header }}
@@ -36,18 +36,16 @@
                 </div>
               </td>
             </ng-container>
-          </ng-container>
-
-          <ng-template #actionColumn>
-            <ng-container *ngIf="column.key === 'action'; else dateColumn">
+          } @else {
+            @if (column.key === "action") {
               <ng-container matColumnDef="{{ column.key }}">
                 <th class="header" mat-header-cell *matHeaderCellDef>
                   {{ column.header }}
                 </th>
                 <td mat-cell *matCellDef="let element">
-                  <ng-container [ngSwitch]="element.status">
-                    <ng-container *ngSwitchCase="'running'">
-                      <ng-container *ngIf="!element.loading">
+                  @switch (element.status) {
+                    @case ("running") {
+                      @if (!element.loading) {
                         <button
                           [disabled]="currentlyPolling"
                           (click)="stopInstance(element)"
@@ -65,17 +63,17 @@
                             >square</mat-icon
                           >
                         </button>
-                      </ng-container>
-                      <div class="spinner-container" *ngIf="element.loading">
-                        <mat-spinner
-                          *ngIf="element.loading"
-                          diameter="24"
-                        ></mat-spinner>
-                      </div>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'stopped'">
-                      <ng-container *ngIf="!element.loading">
+                      }
+                      @if (element.loading) {
+                        <div class="spinner-container">
+                          @if (element.loading) {
+                            <mat-spinner diameter="24"></mat-spinner>
+                          }
+                        </div>
+                      }
+                    }
+                    @case ("stopped") {
+                      @if (!element.loading) {
                         <button
                           [disabled]="currentlyPolling"
                           (click)="startInstance(element)"
@@ -93,19 +91,19 @@
                             >play_arrow</mat-icon
                           >
                         </button>
-                      </ng-container>
-                      <div class="spinner-container" *ngIf="element.loading">
-                        <mat-spinner diameter="24"></mat-spinner>
-                      </div>
-                    </ng-container>
-
-                    <ng-container *ngSwitchDefault>
+                      }
+                      @if (element.loading) {
+                        <div class="spinner-container">
+                          <mat-spinner diameter="24"></mat-spinner>
+                        </div>
+                      }
+                    }
+                    @default {
                       <div class="spinner-container">
                         <mat-spinner diameter="24"></mat-spinner>
                       </div>
-                    </ng-container>
-                  </ng-container>
-
+                    }
+                  }
                   <button
                     (click)="editInstance(element.deploymentId)"
                     color="primary"
@@ -131,52 +129,47 @@
                   </button>
                 </td>
               </ng-container>
-            </ng-container>
-          </ng-template>
-
-          <ng-template #dateColumn>
-            <ng-container
-              *ngIf="column.key === 'timeToExpire'; else otherColumns"
-            >
-              <ng-container matColumnDef="{{ column.key }}">
-                <th class="header" mat-header-cell *matHeaderCellDef>
-                  {{ column.header }}
-                </th>
-                <td mat-cell *matCellDef="let element">
-                  {{ convertDateTime(element[column.key]) }}
-                </td>
-              </ng-container>
-            </ng-container>
-          </ng-template>
-
-          <ng-template #otherColumns>
-            <ng-container matColumnDef="{{ column.key }}">
-              <th class="header" mat-header-cell *matHeaderCellDef>
-                {{ column.header }}
-              </th>
-              <td mat-cell *matCellDef="let element">
-                {{ element[column.key] }}
-              </td>
-            </ng-container>
-          </ng-template>
-        </ng-container>
+            } @else {
+              @if (column.key === "timeToExpire") {
+                <ng-container matColumnDef="{{ column.key }}">
+                  <th class="header" mat-header-cell *matHeaderCellDef>
+                    {{ column.header }}
+                  </th>
+                  <td mat-cell *matCellDef="let element">
+                    {{ convertDateTime(element[column.key]) }}
+                  </td>
+                </ng-container>
+              } @else {
+                <ng-container matColumnDef="{{ column.key }}">
+                  <th class="header" mat-header-cell *matHeaderCellDef>
+                    {{ column.header }}
+                  </th>
+                  <td mat-cell *matCellDef="let element">
+                    {{ element[column.key] }}
+                  </td>
+                </ng-container>
+              }
+            }
+          }
+        }
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         <tr *matNoDataRow class="mat-row">
           <td class="mat-cell" colspan="6">
-            <div
-              *ngIf="!apiService.tableLoading()"
-              style="display: flex; justify-content: center; margin: 12px"
-            >
-              No deployed instances found.
-            </div>
+            @if (!apiService.tableLoading()) {
+              <div style="display: flex; justify-content: center; margin: 12px">
+                No deployed instances found.
+              </div>
+            }
           </td>
         </tr>
       </table>
-      <div *ngIf="apiService.tableLoading()">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-      </div>
+      @if (apiService.tableLoading()) {
+        <div>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+      }
     </mat-card-content>
   </mat-card>
 </div>
