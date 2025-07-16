@@ -11,5 +11,5 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  title = 'turbo-deploy';
+  title = 'Turbo Deploy';
 }
