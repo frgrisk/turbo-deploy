@@ -118,7 +118,19 @@
                     formControlName="ttlValue"
                     matInput
                     placeholder=""
+                    min="1"
+                    step="1"
+                    (keypress)="onKeyPress($event)"
+                    (paste)="onPaste($event)"
                   />
+                  @if (editDeploymentForm.get("ttlValue")?.hasError("min")) {
+                    <mat-error>Duration must be at least 1</mat-error>
+                  }
+                  @if (
+                    editDeploymentForm.get("ttlValue")?.hasError("numeric")
+                  ) {
+                    <mat-error>Please enter a valid positive number</mat-error>
+                  }
                 </mat-form-field>
                 <mat-form-field
                   style="flex: 2"
