@@ -10,4 +10,5 @@ export class DeploymentApiResponse {
   status!: string;
   timeToExpire!: string;
   userData!: string[];
+  loading?: boolean;
 }
