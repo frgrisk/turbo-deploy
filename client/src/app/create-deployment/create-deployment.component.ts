@@ -21,6 +21,11 @@ import { ApiService } from '../shared/services/api.service';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { convertToHours } from '../shared/util/time.util';
+import {
+  numericValidator,
+  onNumericKeyPress,
+  onNumericPaste,
+} from '../shared/util/numeric-input.util';
 
 @Component({
   selector: 'app-create-deployment',
@@ -42,20 +47,6 @@ import { convertToHours } from '../shared/util/time.util';
 })
 export class CreateDeploymentComponent implements OnInit {
   private ngUnsubscribe = new Subject<void>();
-
-  private numericValidator(control: any) {
-    const value = control.value;
-    if (!value) return null;
-
-    if (
-      isNaN(value) ||
-      !Number.isInteger(Number(value)) ||
-      Number(value) <= 0
-    ) {
-      return { numeric: true };
-    }
-    return null;
-  }
 
   deploymentForm!: FormGroup;
   serverSizes: string[] = [];
@@ -87,7 +78,7 @@ export class CreateDeploymentComponent implements OnInit {
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
       lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
-      ttlValue: new FormControl('', [Validators.min(1), this.numericValidator]),
+      ttlValue: new FormControl('', [Validators.min(1), numericValidator]),
       ttlUnit: new FormControl(''),
     });
 
@@ -164,42 +155,10 @@ export class CreateDeploymentComponent implements OnInit {
   }
 
   onKeyPress(event: KeyboardEvent): void {
-    const key = event.key;
-
-    const allowedKeys = [
-      'Backspace',
-      'Delete',
-      'Tab',
-      'Escape',
-      'Enter',
-      'ArrowLeft',
-      'ArrowRight',
-      'ArrowUp',
-      'ArrowDown',
-    ];
-
-    if (
-      event.ctrlKey &&
-      ['a', 'c', 'v', 'x', 'z'].includes(key.toLowerCase())
-    ) {
-      return;
-    }
-
-    if (allowedKeys.includes(key)) {
-      return;
-    }
-
-    if (!/^[0-9]$/.test(key)) {
-      event.preventDefault();
-    }
+    onNumericKeyPress(event);
   }
 
   onPaste(event: ClipboardEvent): void {
-    const clipboardData = event.clipboardData;
-    const pastedText = clipboardData?.getData('text');
-
-    if (pastedText && !/^\d+$/.test(pastedText)) {
-      event.preventDefault();
-    }
+    onNumericPaste(event);
   }
 }
