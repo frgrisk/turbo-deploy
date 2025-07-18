@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
   FormControl,
@@ -22,11 +21,15 @@ import { ApiService } from '../shared/services/api.service';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { convertToHours } from '../shared/util/time.util';
+import {
+  numericValidator,
+  onNumericKeyPress,
+  onNumericPaste,
+} from '../shared/util/numeric-input.util';
 
 @Component({
   selector: 'app-create-deployment',
   imports: [
-    CommonModule,
     RouterModule,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -75,7 +78,7 @@ export class CreateDeploymentComponent implements OnInit {
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
       lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
-      ttlValue: new FormControl('', [Validators.min(1)]),
+      ttlValue: new FormControl('', [Validators.min(1), numericValidator]),
       ttlUnit: new FormControl(''),
     });
 
@@ -149,5 +152,13 @@ export class CreateDeploymentComponent implements OnInit {
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    onNumericKeyPress(event);
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    onNumericPaste(event);
   }
 }
