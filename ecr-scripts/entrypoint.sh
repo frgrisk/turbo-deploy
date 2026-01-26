@@ -17,7 +17,8 @@ echo "Copying Terraform configuration to the /tmp working directory."
 cp -a /var/task/* "$TF_WORKING_DIR/"
 
 echo "Adjusting permissions."
-chmod -R 755 /tmp
+chmod -R 755 /tmp/terraform
+chmod -R 755 /tmp/venv
 
 source /var/task/venv/bin/activate
 
