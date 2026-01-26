@@ -1,4 +1,0 @@
-{
-  "serverSizes": ["t3.medium", "t3.large", "t3.xlarge", "t3.2xlarge"],
-  "amis": ["ami-0d28f30b30f1f3cb9"]
-}
