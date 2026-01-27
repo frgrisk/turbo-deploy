@@ -4,7 +4,7 @@
 # and push it to AWS ECR.
 
 # variables
-ECR_REPOSITORY_NAME="turbo-image"
+ECR_REPOSITORY_NAME="turbo-tf-function"
 AWS_REGION=${AWS_REGION:-"ap-southeast-5"}
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
