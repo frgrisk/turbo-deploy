@@ -45,7 +45,10 @@ jobs:
         run: npm ci
 
       - name: Install Angular
-        run: npm install -g @angular/cli@11
+        run: npm install -g @angular/cli@20
+
+      - name: Run Unit tests
+        run: npm run test:ci
 
       - name: Build UI
         run: |

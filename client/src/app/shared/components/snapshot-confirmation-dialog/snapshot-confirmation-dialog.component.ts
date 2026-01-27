@@ -12,7 +12,6 @@ import { Region } from '../../enum/dropdown.enum';
 
 @Component({
   selector: 'app-snapshot-confirmation-dialog',
-  standalone: true,
   imports: [MatDialogModule, MatButtonModule],
   templateUrl: './snapshot-confirmation-dialog.component.html',
   styleUrls: ['./snapshot-confirmation-dialog.component.scss'],

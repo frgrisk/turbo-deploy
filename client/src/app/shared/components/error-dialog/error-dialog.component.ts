@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-error-dialog',
-  standalone: true,
   imports: [MatButtonModule, MatDialogModule, MatIconModule],
   templateUrl: './error-dialog.component.html',
   styleUrl: './error-dialog.component.scss',
