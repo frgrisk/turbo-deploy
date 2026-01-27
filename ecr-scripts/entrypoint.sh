@@ -7,6 +7,7 @@ echo "Starting script execution."
 VENV_PATH="/tmp/venv"
 TF_WORKING_DIR="/tmp/terraform"
 TEMPLATES_DIR="/tmp/terraform"
+export CHECKPOINT_DISABLE=1
 
 echo "Ensuring working directories exist."
 mkdir -p "$TF_WORKING_DIR"
