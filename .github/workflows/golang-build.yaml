@@ -35,7 +35,6 @@ jobs:
         run: echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
 
       - name: Build, zip and upload to AWS S3
-        working-directory: ./e
         id: build-image
         env:
           AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
