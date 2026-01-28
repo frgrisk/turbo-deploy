@@ -1,8 +1,11 @@
 #!/bin/bash
 
+# The purpose of this script is to build the docker image that contains the terraform code
+# and push it to AWS ECR.
+
 # variables
-ECR_REPOSITORY_NAME="my-tf-function"
-AWS_REGION=${AWS_REGION:-"ap-southeast-1"}
+ECR_REPOSITORY_NAME="turbo-tf-function"
+AWS_REGION=${AWS_REGION:-"ap-southeast-5"}
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 # Create ECR repository if it does not exist
@@ -14,7 +17,7 @@ else
 fi
 
 # Build Docker Image
-docker build --build-arg AWS_DEFAULT_REGION=${AWS_REGION} -t ${ECR_REPOSITORY_NAME}:latest .
+docker build --provenance false --platform linux/amd64 --build-arg AWS_DEFAULT_REGION=${AWS_REGION} -t ${ECR_REPOSITORY_NAME}:latest .
 
 # Authenticate Docker to ECR
 aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
