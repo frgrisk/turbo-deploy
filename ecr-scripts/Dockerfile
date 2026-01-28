@@ -33,3 +33,5 @@ RUN python3 -m venv venv \
     && . venv/bin/activate && pip3 install -r requirements.txt
 
 ENTRYPOINT [ "/bin/bash", "entrypoint.sh" ]
+
+CMD [ "function.handler" ]

@@ -1,36 +1,23 @@
-#!/bin/bash
+#!/bin/sh
 
-set -ex
+set -euo pipefail
 
-echo "Starting script execution."
+# Initialization - load function handler
+source $LAMBDA_TASK_ROOT/"$(echo $_HANDLER | cut -d. -f1).sh"
 
-VENV_PATH="/tmp/venv"
-TF_WORKING_DIR="/tmp/terraform"
-TEMPLATES_DIR="/tmp/terraform"
-export CHECKPOINT_DISABLE=1
+# Processing
+while true
+do
+  HEADERS="$(mktemp)"
+  # Get an event. The HTTP request will block until one is received
+  EVENT_DATA=$(curl -sS -LD "$HEADERS" "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next")
 
-echo "Ensuring working directories exist."
-mkdir -p "$TF_WORKING_DIR"
-mkdir -p "$VENV_PATH"
+  # Extract request ID by scraping response headers received above
+  REQUEST_ID=$(grep -Fi Lambda-Runtime-Aws-Request-Id "$HEADERS" | tr -d '[:space:]' | cut -d: -f2)
 
+  # Run the handler function from the script
+  RESPONSE=$($(echo "$_HANDLER" | cut -d. -f2) "$EVENT_DATA")
 
-echo "Copying Terraform configuration to the /tmp working directory."
-cp -a /var/task/* "$TF_WORKING_DIR/"
-
-echo "Adjusting permissions."
-chmod -R 755 /tmp/terraform
-chmod -R 755 /tmp/venv
-
-source /var/task/venv/bin/activate
-
-echo "Changing to the Terraform working directory."
-cd "$TF_WORKING_DIR"
-
-# Use envsubst to replace variables in the template and save it as main.tf
-envsubst < "$TEMPLATES_DIR/main.tf.tpl" > main.tf
-
-echo "Initializing Terraform."
-terraform init -input=false -no-color
-
-echo "Applying Terraform configuration."
-terraform apply -input=false -auto-approve -lock=false -no-color
+  # Send the response
+  curl "http://${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/$REQUEST_ID/response"  -d "$RESPONSE"
+done
