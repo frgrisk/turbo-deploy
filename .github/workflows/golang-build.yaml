@@ -8,6 +8,7 @@ on:
 
 env:
   S3_BUCKET_NAME: turbo-deploy-golang-bucket
+  S3_ZIP_KEY: lambda/lambda_function.zip
   AWS_REGION: us-east-2
   LAMBDA_FUNCTION_NAME: turbo-deploy-golang-lambda
 
@@ -33,7 +34,7 @@ jobs:
         shell: bash
         run: echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
 
-      - name: Build, zip and push to AWS S3
+      - name: Build, zip and upload to AWS S3
         working-directory: ./e
         id: build-image
         env:
@@ -43,10 +44,11 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bootstrap .
           echo "Packaging binary file into ZIP file"
           zip lambda_function.zip bootstrap
+          aws s3 cp ./lambda_function.zip s3://$S3_BUCKET_NAME/$S3_ZIP_KEY
 
       - name: Update Lambda function image
         run: |
           aws lambda update-function-code \
             --function-name $LAMBDA_FUNCTION_NAME \
-            --s3-bucket turbo-deploy-golang-bucket \
-            --s3-key lambda/lambda_function.zip
+            --s3-bucket $S3_BUCKET_NAME \
+            --s3-key $S3_ZIP_KEY

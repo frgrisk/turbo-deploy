@@ -9,7 +9,7 @@ on:
 env:
   ECR_REPOSITORY_NAME: turbo-deploy-tf-function
   AWS_REGION: us-east-2
-  LAMBDA_FUNCTION_NAME: turbo-deploy-tf-lambda
+  LAMBDA_FUNCTION_NAME: turbo-deploy-terraform-lambda
 
 jobs:
   build:
