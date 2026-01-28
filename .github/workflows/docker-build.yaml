@@ -48,6 +48,8 @@ jobs:
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
 
       - name: Update Terraform Lambda function
+        env:
+          AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
         run: |
           aws lambda update-function-code \
             --function-name $LAMBDA_FUNCTION_NAME \
