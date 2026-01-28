@@ -44,11 +44,12 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bootstrap .
           echo "Packaging binary file into ZIP file"
           zip lambda_function.zip bootstrap
-          aws s3 cp ./lambda_function.zip s3://$S3_BUCKET_NAME/$S3_ZIP_KEY
+          aws s3 cp ./lambda_function.zip s3://$S3_BUCKET_NAME/$S3_ZIP_KEY --region $AWS_REGION
 
-      - name: Update Lambda function image
+      - name: Update Golang Lambda function image
         run: |
           aws lambda update-function-code \
             --function-name $LAMBDA_FUNCTION_NAME \
             --s3-bucket $S3_BUCKET_NAME \
-            --s3-key $S3_ZIP_KEY
+            --s3-key $S3_ZIP_KEY \
+            --region $AWS_REGION
