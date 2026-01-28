@@ -7,7 +7,7 @@ BINARY_NAME=lambda_function
 ZIP_FILE=lambda_function.zip
 
 # Default make target
-all: clean build zip hash
+all: clean build zip
 
 local-build:
 	@echo "local compilation"
@@ -25,14 +25,9 @@ build:
 # Create a zip file
 zip:
 	@echo "Packaging binary and config file into ZIP file"
-	zip ${ZIP_FILE} bootstrap config.json
+	zip ${ZIP_FILE} bootstrap
 	@echo "Cleanup: Removing temporary 'bootstrap' binary"
 	rm bootstrap
-
-# Calculate the source code hash for Terraform
-hash:
-	@echo "Calculating source code hash for Terraform"
-	@openssl dgst -sha256 $(ZIP_FILE) | sed 's/^.* //'
 
 # Clean up ZIP file and binary
 clean: 
