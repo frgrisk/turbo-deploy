@@ -1,15 +1,16 @@
-name: AWS Lambda Terraform Image Build
+name: AWS Lambda Golang Image Build
 
 on:
   push:
     branches: [main]
     paths:
-      - "ecr-scripts/**"
+      - "server/**"
 
 env:
-  ECR_REPOSITORY_NAME: turbo-deploy-tf-function
+  S3_BUCKET_NAME: turbo-deploy-golang-bucket
+  S3_ZIP_KEY: lambda/lambda_function.zip
   AWS_REGION: us-east-2
-  LAMBDA_FUNCTION_NAME: turbo-deploy-terraform-lambda
+  LAMBDA_FUNCTION_NAME: turbo-deploy-golang-lambda
 
 jobs:
   build:
@@ -33,25 +34,21 @@ jobs:
         shell: bash
         run: echo "AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_ENV
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push the image to Amazon ECR
-        working-directory: ./ecr-scripts
+      - name: Build, zip and upload to AWS S3
         id: build-image
         env:
           AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
         run: |
-          docker build --build-arg AWS_DEFAULT_REGION=$AWS_REGION -t $ECR_REPOSITORY_NAME:latest .
-          docker tag $ECR_REPOSITORY_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
+          echo "Compiling code to binary"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bootstrap .
+          echo "Packaging binary file into ZIP file"
+          zip lambda_function.zip bootstrap
+          aws s3 cp ./lambda_function.zip s3://$S3_BUCKET_NAME/$S3_ZIP_KEY --region $AWS_REGION
 
-      - name: Update Terraform Lambda function
-        env:
-          AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+      - name: Update Golang Lambda function image
         run: |
           aws lambda update-function-code \
             --function-name $LAMBDA_FUNCTION_NAME \
-            --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest \
+            --s3-bucket $S3_BUCKET_NAME \
+            --s3-key $S3_ZIP_KEY \
             --region $AWS_REGION
