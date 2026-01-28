@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'ecr-scripts/**'
+      - "ecr-scripts/**"
 
 env:
   ECR_REPOSITORY_NAME: turbo-deploy-tf-function

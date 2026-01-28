@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'server/**'
+      - "server/**"
 
 env:
   S3_BUCKET_NAME: turbo-deploy-golang-bucket
