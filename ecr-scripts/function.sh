@@ -34,5 +34,5 @@ function handler() {
     terraform init -input=false -no-color
 
     echo "Applying Terraform configuration."
-    terraform apply -input=false -auto-approve -lock=false -no-color
+    terraform apply -input=false -auto-approve -no-color
 }
