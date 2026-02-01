@@ -57,7 +57,7 @@ jobs:
           ng b -c $env_without_preqin
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: UI-Build-${{ matrix.environment }}
           path: ./client/dist/
