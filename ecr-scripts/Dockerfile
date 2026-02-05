@@ -19,6 +19,12 @@ RUN yum install -y unzip \
     && unzip -d /usr/local/bin /tmp/terraform.zip \
     && rm /tmp/terraform.zip
 
+# Install AWS
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
+
 # Install Python and pip
 RUN yum install -y python3 python3-pip gettext && yum clean all \
     && python3 -m pip install --upgrade pip
