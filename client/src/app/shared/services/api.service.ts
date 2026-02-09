@@ -92,10 +92,24 @@ export class ApiService {
       .pipe(catchError(this.handleError.bind(this)));
   }
 
-  captureInstanceSnapshopt(payload: any): Observable<any> {
+  checkAmiLimit(payload: any): Observable<any> {
+    return this.http
+      .get(`${environment.apiBaseUrl}/instance-ami/${payload}/check-limit`)
+      .pipe(catchError(this.handleError.bind(this)));
+  }
+
+  deleteInstanceAmi(payload: any): Observable<any> {
+    return this.http
+      .delete(
+        `${environment.apiBaseUrl}/instance-ami/${payload.instance_id}/${payload.image_id}`,
+      )
+      .pipe(catchError(this.handleError.bind(this)));
+  }
+
+  captureInstanceAmi(payload: any): Observable<any> {
     return this.http
       .put(
-        `${environment.apiBaseUrl}/capture-instance-snapshot/${payload.id}`,
+        `${environment.apiBaseUrl}/instance-ami/${payload.id}/capture`,
         payload,
       )
       .pipe(catchError(this.handleError.bind(this)));

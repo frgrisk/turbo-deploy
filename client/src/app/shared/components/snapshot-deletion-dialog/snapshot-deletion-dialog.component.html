@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>AMI Limit Reached</h2>
+<mat-dialog-content>
+  <p>
+    You've reached the maximum number of AMIs that can be configured for this
+    instance.
+  </p>
+  <p>The oldest AMI will be deleted to make room for the new one:</p>
+  <div class="snapshot-info">
+    <p><strong>Name:</strong> {{ data.ami_name }}</p>
+    <p><strong>Date:</strong> {{ data.ami_date | date: "medium" }}</p>
+  </div>
+  <p>Do you want to continue?</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="warn" (click)="onConfirm()">
+    Delete & Continue
+  </button>
+</mat-dialog-actions>

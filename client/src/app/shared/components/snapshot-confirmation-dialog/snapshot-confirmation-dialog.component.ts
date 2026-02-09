@@ -1,14 +1,13 @@
 import { Component, Inject } from '@angular/core';
-import {
-  MAT_DIALOG_DATA,
-  MatDialogModule,
-  MatDialogRef,
-} from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { DeploymentApiRequest } from '../../model/deployment-request';
 import { ApiService } from '../../services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Region } from '../../enum/dropdown.enum';
+import { MatDialog } from '@angular/material/dialog';
+import { EMPTY } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { SnapshotLimitDialogComponent } from '../snapshot-deletion-dialog/snapshot-deletion-dialog.component';
 
 @Component({
   selector: 'app-snapshot-confirmation-dialog',
@@ -22,6 +21,7 @@ export class SnapshotConfirmationDialogComponent {
     public data: { instanceElement: any },
     public apiService: ApiService,
     private _snackBar: MatSnackBar,
+    private dialog: MatDialog,
   ) {}
 
   onConfirm() {
@@ -36,8 +36,44 @@ export class SnapshotConfirmationDialogComponent {
       timeToExpire: this.data.instanceElement.timeToExpire,
       userData: this.data.instanceElement.userData,
     };
+
     this.apiService
-      .captureInstanceSnapshopt(apiPayload)
+      .checkAmiLimit(this.data.instanceElement.ec2InstanceId)
+      .pipe(
+        switchMap((response) => {
+          if (response.ami_limit_hit) {
+            // Open dialog and wait for confirmation
+            const dialogRef = this.dialog.open(SnapshotLimitDialogComponent, {
+              data: {
+                ami_id: response.oldest_image_id,
+                ami_name: response.oldest_image_name,
+                ami_date: response.oldest_image_date,
+              },
+            });
+
+            return dialogRef.afterClosed().pipe(
+              switchMap((confirmed) => {
+                if (!confirmed) {
+                  return EMPTY;
+                }
+                const deletePayload = {
+                  instance_id: this.data.instanceElement.deploymentId,
+                  image_id: response.oldest_image_id,
+                };
+                return this.apiService
+                  .deleteInstanceAmi(deletePayload)
+                  .pipe(
+                    switchMap(() =>
+                      this.apiService.captureInstanceAmi(apiPayload),
+                    ),
+                  );
+              }),
+            );
+          }
+
+          return this.apiService.captureInstanceAmi(apiPayload);
+        }),
+      )
       .subscribe(() => this.successSnackBar());
   }
 
