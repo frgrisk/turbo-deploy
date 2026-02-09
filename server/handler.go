@@ -496,7 +496,7 @@ func PopulateSpotTagResponse(ctx context.Context) error {
 const instanceParameterName = "instance_id"
 
 func CheckAMILimit(c *gin.Context) {
-	var maxAMIsAllowed = 3
+	maxAMIsAllowed := 3
 
 	id := c.Param(instanceParameterName)
 	log.Println("capture instance image request for instance:", id)
@@ -530,13 +530,13 @@ func CheckAMILimit(c *gin.Context) {
 		oldestImageID := *oldestImage.ImageId
 		oldestImageDate := *oldestImage.CreationDate
 		oldestImageName := aws.ToString(oldestImage.Name)
-		ami_limit_hit := true
+		amiLimitHit := true
 
 		c.JSON(http.StatusOK, gin.H{
-			"oldest_image_id": oldestImageID,
+			"oldest_image_id":   oldestImageID,
 			"oldest_image_name": oldestImageName,
 			"oldest_image_date": oldestImageDate,
-			"ami_limit_hit": ami_limit_hit,
+			"ami_limit_hit":     amiLimitHit,
 		})
 		return
 	}

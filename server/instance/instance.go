@@ -293,7 +293,7 @@ func GetImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 
 func DeregisterImage(imageID string) error {
 	describeDeregisterImage := &ec2.DeregisterImageInput{
-		ImageId: aws.String(imageID),
+		ImageId:                   aws.String(imageID),
 		DeleteAssociatedSnapshots: aws.Bool(true),
 	}
 
