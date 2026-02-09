@@ -1,8 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import {
-  MAT_DIALOG_DATA,
-  MatDialogModule,
-} from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { DeploymentApiRequest } from '../../model/deployment-request';
 import { ApiService } from '../../services/api.service';
@@ -50,30 +47,34 @@ export class SnapshotConfirmationDialogComponent {
               data: {
                 ami_id: response.oldest_image_id,
                 ami_name: response.oldest_image_name,
-                ami_date: response.oldest_image_date
-              }
-        });
-        
-          return dialogRef.afterClosed().pipe(
-          switchMap((confirmed) => {
-            if (!confirmed) {
-              return EMPTY;
-            }
-            const deletePayload = {
-              instance_id: this.data.instanceElement.deploymentId,
-              image_id: response.oldest_image_id
-            };
-            return this.apiService.deleteInstanceAmi(deletePayload).pipe(
-              switchMap(() => this.apiService.captureInstanceAmi(apiPayload))
+                ami_date: response.oldest_image_date,
+              },
+            });
+
+            return dialogRef.afterClosed().pipe(
+              switchMap((confirmed) => {
+                if (!confirmed) {
+                  return EMPTY;
+                }
+                const deletePayload = {
+                  instance_id: this.data.instanceElement.deploymentId,
+                  image_id: response.oldest_image_id,
+                };
+                return this.apiService
+                  .deleteInstanceAmi(deletePayload)
+                  .pipe(
+                    switchMap(() =>
+                      this.apiService.captureInstanceAmi(apiPayload),
+                    ),
+                  );
+              }),
             );
-          })
-        );
-      }
-      
-      return this.apiService.captureInstanceAmi(apiPayload);
-    })
-  )
-  .subscribe(() => this.successSnackBar());
+          }
+
+          return this.apiService.captureInstanceAmi(apiPayload);
+        }),
+      )
+      .subscribe(() => this.successSnackBar());
   }
 
   successSnackBar() {

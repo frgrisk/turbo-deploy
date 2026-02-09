@@ -2,7 +2,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { SnapshotLimitDialogComponent, SnapshotLimitData } from './snapshot-deletion-dialog.component';
+import {
+  SnapshotLimitDialogComponent,
+  SnapshotLimitData,
+} from './snapshot-deletion-dialog.component';
 import { ApiService } from '../../services/api.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -17,26 +20,26 @@ describe('SnapshotLimitDialogComponent', () => {
   beforeEach(async () => {
     // Create mock objects
     mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
-    mockApiService = jasmine.createSpyObj('ApiService', ['checkAmiLimit', 'deleteInstanceAmi']); // Add methods you need
+    mockApiService = jasmine.createSpyObj('ApiService', [
+      'checkAmiLimit',
+      'deleteInstanceAmi',
+    ]); // Add methods you need
     mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
-    
+
     mockDialogData = {
       ami_id: 'ami-12345678',
       ami_name: 'Test AMI',
-      ami_date: '2024-02-09'
+      ami_date: '2024-02-09',
     };
 
     await TestBed.configureTestingModule({
-      imports: [
-        SnapshotLimitDialogComponent,
-        NoopAnimationsModule
-      ],
+      imports: [SnapshotLimitDialogComponent, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: ApiService, useValue: mockApiService },
-        { provide: MatSnackBar, useValue: mockSnackBar }
-      ]
+        { provide: MatSnackBar, useValue: mockSnackBar },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SnapshotLimitDialogComponent);
@@ -84,7 +87,7 @@ describe('SnapshotLimitDialogComponent', () => {
       const numericData: SnapshotLimitData = {
         ami_id: 12345,
         ami_name: 'Numeric AMI',
-        ami_date: '2024-01-01'
+        ami_date: '2024-01-01',
       };
 
       TestBed.resetTestingModule();
@@ -94,13 +97,13 @@ describe('SnapshotLimitDialogComponent', () => {
           { provide: MatDialogRef, useValue: mockDialogRef },
           { provide: MAT_DIALOG_DATA, useValue: numericData },
           { provide: ApiService, useValue: mockApiService },
-          { provide: MatSnackBar, useValue: mockSnackBar }
-        ]
+          { provide: MatSnackBar, useValue: mockSnackBar },
+        ],
       });
 
       const newFixture = TestBed.createComponent(SnapshotLimitDialogComponent);
       const newComponent = newFixture.componentInstance;
-      
+
       expect(newComponent.data.ami_id).toBe(12345);
       expect(typeof newComponent.data.ami_id).toBe('number');
     });

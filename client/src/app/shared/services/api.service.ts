@@ -100,7 +100,9 @@ export class ApiService {
 
   deleteInstanceAmi(payload: any): Observable<any> {
     return this.http
-      .delete(`${environment.apiBaseUrl}/instance-ami/${payload.instance_id}/${payload.image_id}`)
+      .delete(
+        `${environment.apiBaseUrl}/instance-ami/${payload.instance_id}/${payload.image_id}`,
+      )
       .pipe(catchError(this.handleError.bind(this)));
   }
 

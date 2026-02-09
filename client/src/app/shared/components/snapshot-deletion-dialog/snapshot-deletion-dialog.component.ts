@@ -15,11 +15,7 @@ export interface SnapshotLimitData {
 
 @Component({
   selector: 'app-snapshot-limit-dialog',
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule
-  ],
+  imports: [CommonModule, MatDialogModule, MatButtonModule],
   templateUrl: './snapshot-deletion-dialog.component.html',
   styleUrls: ['./snapshot-deletion-dialog.component.scss'],
 })
@@ -28,7 +24,7 @@ export class SnapshotLimitDialogComponent {
     public dialogRef: MatDialogRef<SnapshotLimitDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: SnapshotLimitData,
     public apiService: ApiService,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
   ) {}
 
   onConfirm(): void {
