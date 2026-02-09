@@ -65,7 +65,7 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 					},
 				}
 
-				imageResult, err := getImage(filter)
+				imageResult, err := GetImage(filter)
 				if err != nil {
 					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
 					return nil, err
@@ -151,39 +151,6 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 }
 
 func CaptureInstanceImage(instanceID string) (string, error) {
-	// check if an image for that instance already exists
-	filter := []types.Filter{
-		{
-			Name:   aws.String("source-instance-id"),
-			Values: []string{instanceID},
-		},
-		{
-			Name:   aws.String("is-public"),
-			Values: []string{"false"},
-		},
-	}
-
-	imageResult, err := getImage(filter)
-	if err != nil {
-		log.Printf("failed to resolve image for instance %s: %v", instanceID, err)
-		return "", err
-	}
-
-	// if it exists deregister it
-	if len(imageResult.Images) == 0 {
-		log.Printf("No images returned for deregistering")
-	} else {
-		describeDeregisterImage := &ec2.DeregisterImageInput{
-			ImageId: imageResult.Images[0].ImageId,
-		}
-		log.Printf("The id of the image is %s, deregistering...", *imageResult.Images[0].ImageId)
-		_, err := ec2Client.DeregisterImage(context.Background(), describeDeregisterImage)
-		if err != nil {
-			log.Printf("failed to deregister image for instance %s: %v", instanceID, err)
-			return "", err
-		}
-	}
-
 	// get tags of the instance
 	describeInstanceTags := &ec2.DescribeTagsInput{
 		Filters: []types.Filter{
@@ -246,7 +213,7 @@ func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Fil
 	for _, filter := range filterMap {
 		f := filter
 		g.Go(func() error {
-			imageResult, err := getImage(f)
+			imageResult, err := GetImage(f)
 			if err != nil {
 				log.Printf("failed to retrieve images: %v", err)
 				return err
@@ -297,7 +264,7 @@ func GetAMIName(ami []models.AmiAttr) ([]models.AmiAttr, error) {
 					Values: []string{ami[i].AmiID},
 				},
 			}
-			imageResult, err := getImage(filter)
+			imageResult, err := GetImage(filter)
 			if err == nil {
 				ami[i].AmiName = *imageResult.Images[0].Name
 			}
@@ -311,7 +278,7 @@ func GetAMIName(ami []models.AmiAttr) ([]models.AmiAttr, error) {
 	return ami, nil
 }
 
-func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
+func GetImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 	describeInstanceImage := &ec2.DescribeImagesInput{
 		Filters: filter,
 	}
@@ -322,4 +289,20 @@ func getImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 	}
 
 	return imageResult, nil
+}
+
+func DeregisterImage(imageID string) error {
+	describeDeregisterImage := &ec2.DeregisterImageInput{
+		ImageId: aws.String(imageID),
+		DeleteAssociatedSnapshots: aws.Bool(true),
+	}
+
+	_, err := ec2Client.DeregisterImage(context.Background(), describeDeregisterImage)
+	if err != nil {
+		log.Printf("failed to deregister image %s: %v", imageID, err)
+		return err
+	}
+
+	log.Printf("Image %s deregistered successfully", imageID)
+	return nil
 }

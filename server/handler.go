@@ -8,8 +8,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -83,8 +85,10 @@ func SetupRoutes(r *gin.Engine) {
 	// AWS Data requests
 	r.GET("/awsdata", GetAWSData)
 
-	// Capture instance Snapshot
-	r.PUT("/capture-instance-snapshot/:id", CaptureInstanceSnapshot)
+	// Capture instance Ami
+	r.PUT("/instance-ami/:id/capture", CaptureInstanceAMI)
+	r.GET("/instance-ami/:instance_id/check-limit", CheckAMILimit)
+	r.DELETE("/instance-ami/:instance_id/:image_id", DeleteInstanceAMI)
 }
 
 func CreateInstanceRequest(c *gin.Context) {
@@ -489,7 +493,76 @@ func PopulateSpotTagResponse(ctx context.Context) error {
 	return nil
 }
 
-func CaptureInstanceSnapshot(c *gin.Context) {
+const instanceParameterName = "instance_id"
+
+func CheckAMILimit(c *gin.Context) {
+	var maxAMIsAllowed = 3
+
+	id := c.Param(instanceParameterName)
+	log.Println("capture instance image request for instance:", id)
+
+	// check if an image for that instance already exists
+	filter := []types.Filter{
+		{
+			Name:   aws.String("source-instance-id"),
+			Values: []string{id},
+		},
+		{
+			Name:   aws.String("is-public"),
+			Values: []string{"false"},
+		},
+	}
+
+	imageResult, err := instance.GetImage(filter)
+	if err != nil {
+		log.Printf("failed to resolve image for instance %s: %v", id, err)
+	}
+
+	if len(imageResult.Images) >= maxAMIsAllowed {
+		// Sort images by creation date to find the oldest (ascending order)
+		sort.Slice(imageResult.Images, func(i, j int) bool {
+			timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
+			timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
+			return timeI.Before(timeJ) // Oldest first
+		})
+
+		oldestImage := imageResult.Images[0]
+		oldestImageID := *oldestImage.ImageId
+		oldestImageDate := *oldestImage.CreationDate
+		oldestImageName := aws.ToString(oldestImage.Name)
+		ami_limit_hit := true
+
+		c.JSON(http.StatusOK, gin.H{
+			"oldest_image_id": oldestImageID,
+			"oldest_image_name": oldestImageName,
+			"oldest_image_date": oldestImageDate,
+			"ami_limit_hit": ami_limit_hit,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"ami_limit_hit": false,
+	})
+}
+
+func DeleteInstanceAMI(c *gin.Context) {
+	id := c.Param(instanceParameterName)
+	imageID := c.Param("image_id")
+
+	log.Println("delete ami request for id:", id)
+
+	log.Printf("Attempting to delete image with ID: %s", imageID)
+
+	if err := instance.DeregisterImage(imageID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func CaptureInstanceAMI(c *gin.Context) {
 	var req models.Payload
 
 	err := c.BindJSON(&req)
@@ -501,10 +574,10 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 	}
 
 	id := c.Param(pathParameterName)
-	log.Println("update request for id:", id)
+	log.Println("create ami request for id:", id)
 
-	var snapshotID string
-	if snapshotID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
+	var amiID string
+	if amiID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -523,7 +596,7 @@ func CaptureInstanceSnapshot(c *gin.Context) {
 		Region:            req.Region,
 		CreationUser:      req.CreationUser,
 		Lifecycle:         req.Lifecycle,
-		SnapShot:          snapshotID,
+		SnapShot:          amiID,
 		ContentDeployment: req.ContentDeployment,
 		TimeToExpire:      timeToLive,
 		UserData:          req.UserData,
