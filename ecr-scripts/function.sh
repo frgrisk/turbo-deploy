@@ -31,7 +31,7 @@ function handler() {
     terraform init -input=false -no-color
 
     echo "Applying Terraform configuration."
-    terraform apply -input=false -auto-approve -no-color 2>&1 | tee /tmp/tf_output.log >&2
+    terraform apply -input=false -auto-approve -no-color 2>&1 | tee /tmp/tf_output.log
     tf_exit_code=${PIPESTATUS[0]}
 
     local sns_topic_arn="${SNS_TOPIC_ARN:-}"
@@ -47,6 +47,13 @@ function handler() {
             --subject "$subject" \
             --message "$message" \
             --region "${AWS_REGION_CUSTOM}"
+        
+        # Return error message to Lambda
+        echo "Terraform apply failed with exit code ${tf_exit_code}"
+        
         return 1
     fi
+
+    # Return success response
+    echo '{"statusCode":200,"body":"Terraform apply completed successfully"}'
 }
