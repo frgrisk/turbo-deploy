@@ -1,0 +1,53 @@
+.dialog-container {
+  padding: 8px;
+  min-width: 400px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 20px;
+}
+
+.dialog-header h2 {
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.warning-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: #f44336;
+}
+
+.dialog-message {
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.6;
+}
+
+.fields-container {
+  margin: 16px 0;
+}
+
+mat-divider {
+  margin: 16px 0;
+}
+
+.confirm-message {
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+mat-dialog-actions {
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+button[mat-raised-button] mat-icon {
+  margin-right: 6px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

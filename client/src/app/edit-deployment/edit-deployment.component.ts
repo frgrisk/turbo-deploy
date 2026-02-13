@@ -16,12 +16,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
 import { Subject, filter, switchMap, takeUntil, tap } from 'rxjs';
-
+import { MatDialog } from '@angular/material/dialog';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { ApiService } from '../shared/services/api.service';
 import { DeploymentsService } from '../shared/services/deployments.service';
 import { convertDateTime, convertToHours } from '../shared/util/time.util';
+import { EditConfirmationDialogComponent } from '../shared/components/edit-deployment-confirmation-dialog/edit-deployment-confirmation-dialog.component';
 import {
   numericValidator,
   onNumericKeyPress,
@@ -63,6 +64,7 @@ export class EditDeploymentComponent {
     private router: Router,
     private _snackBar: MatSnackBar,
     private deploymentService: DeploymentsService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -103,6 +105,8 @@ export class EditDeploymentComponent {
     });
   }
 
+  private originalFormValue: any;
+
   initializeData() {
     this.apiService
       .getAWSData()
@@ -120,7 +124,8 @@ export class EditDeploymentComponent {
       )
       .subscribe((response: any) => {
         this.editDeploymentForm.reset({}, { emitEvent: false });
-        (this.editDeploymentForm.patchValue({
+
+        const formData = {
           id: response.ID,
           hostname: response.Hostname,
           region: response.Region,
@@ -128,13 +133,80 @@ export class EditDeploymentComponent {
           serverSize: response.ServerSize,
           userData: response.UserData,
           lifecycle: response.Lifecycle,
-        }),
-          { emitEvent: false });
+        };
+
+        this.editDeploymentForm.patchValue(formData, { emitEvent: false });
+
+        // Store original values
+        this.originalFormValue = this.editDeploymentForm.getRawValue();
+
         this.currentExpiry = convertDateTime(response.TimeToExpire);
       });
   }
 
   submitForm() {
+    const changedFields = this.getChangedFields();
+    const warnings = this.getWarnings(changedFields);
+
+    if (warnings.length > 0) {
+      this.showChangeWarningDialog(warnings).then((confirmed) => {
+        if (confirmed) {
+          this.processFormSubmission();
+        }
+      });
+    } else {
+      this.processFormSubmission();
+    }
+  }
+
+  private getChangedFields(): string[] {
+    const currentValue = this.editDeploymentForm.getRawValue();
+    const changedFields: string[] = [];
+
+    Object.keys(currentValue).forEach((key) => {
+      if (currentValue[key] !== this.originalFormValue[key]) {
+        changedFields.push(key);
+      }
+    });
+
+    return changedFields;
+  }
+
+  private getWarnings(changedFields: string[]): string[] {
+    const warnings: string[] = [];
+
+    // Check if AMI changed
+    if (changedFields.includes('ami')) {
+      warnings.push('AMI Choice');
+    }
+
+    // Check if lifecycle changed
+    if (changedFields.includes('lifecycle')) {
+      warnings.push('Lifecycle');
+    }
+
+    // Check if serverSize changed AND lifecycle is "spot"
+    if (
+      changedFields.includes('serverSize') &&
+      this.originalFormValue.lifecycle === 'spot'
+    ) {
+      warnings.push('Server Size');
+    }
+
+    return warnings;
+  }
+
+  private showChangeWarningDialog(warnings: string[]): Promise<boolean> {
+    const dialogRef = this.dialog.open(EditConfirmationDialogComponent, {
+      data: {
+        fields: warnings,
+      },
+    });
+
+    return dialogRef.afterClosed().toPromise();
+  }
+
+  private processFormSubmission() {
     const form = this.editDeploymentForm.getRawValue();
     let apiPayload: DeploymentApiRequest = {
       id: form.id,

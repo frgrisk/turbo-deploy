@@ -16,7 +16,7 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   key_name                    = data.aws_key_pair.admin_key.key_name
   iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
-  user_data_replace_on_change = true
+  user_data_replace_on_change = false
 
   tags = {
     Name         = each.value.hostname
@@ -50,7 +50,11 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   key_name                    = data.aws_key_pair.admin_key.key_name
   iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
-  user_data_replace_on_change = true
+  user_data_replace_on_change = false
+
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 
   tags = {
     Name         = each.value.hostname
