@@ -1,0 +1,36 @@
+<div class="dialog-container">
+  
+  <div class="dialog-header">
+    <mat-icon class="warning-icon">warning_amber</mat-icon>
+    <h2 mat-dialog-title>Instance Termination Warning</h2>
+  </div>
+
+  <mat-dialog-content>
+    <p class="dialog-message">
+      Changing the following field<span *ngIf="data.fields.length > 1">s</span>
+      will cause the current instance to be <strong>terminated</strong> and a new instance to be created:
+    </p>
+
+    <div class="fields-container">
+      <mat-chip-set>
+        <mat-chip *ngFor="let field of data.fields">
+          <mat-icon matChipAvatar>edit</mat-icon>
+          {{ field }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <p class="confirm-message">Do you want to continue?</p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="warn" (click)="onConfirm()">
+      <mat-icon>power_settings_new</mat-icon>
+      Terminate & Continue
+    </button>
+  </mat-dialog-actions>
+
+</div>
