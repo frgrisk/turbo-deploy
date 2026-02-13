@@ -34,7 +34,7 @@ export class SnapshotConfirmationDialogComponent {
       serverSize: this.data.instanceElement.serverSize,
       lifecycle: this.data.instanceElement.lifecycle,
       timeToExpire: this.data.instanceElement.timeToExpire,
-      userData: this.data.instanceElement.userData,
+      userData: this.data.instanceElement.userData?.filter((u: string) => u !== '') ?? [],
     };
 
     this.apiService
