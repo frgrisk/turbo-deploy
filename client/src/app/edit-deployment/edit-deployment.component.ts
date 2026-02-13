@@ -124,7 +124,7 @@ export class EditDeploymentComponent {
       )
       .subscribe((response: any) => {
         this.editDeploymentForm.reset({}, { emitEvent: false });
-        
+
         const formData = {
           id: response.ID,
           hostname: response.Hostname,
@@ -134,12 +134,12 @@ export class EditDeploymentComponent {
           userData: response.UserData,
           lifecycle: response.Lifecycle,
         };
-        
+
         this.editDeploymentForm.patchValue(formData, { emitEvent: false });
-        
+
         // Store original values
         this.originalFormValue = this.editDeploymentForm.getRawValue();
-        
+
         this.currentExpiry = convertDateTime(response.TimeToExpire);
       });
   }
@@ -162,44 +162,47 @@ export class EditDeploymentComponent {
   private getChangedFields(): string[] {
     const currentValue = this.editDeploymentForm.getRawValue();
     const changedFields: string[] = [];
-    
-    Object.keys(currentValue).forEach(key => {
+
+    Object.keys(currentValue).forEach((key) => {
       if (currentValue[key] !== this.originalFormValue[key]) {
         changedFields.push(key);
       }
     });
-    
+
     return changedFields;
   }
 
   private getWarnings(changedFields: string[]): string[] {
-  const warnings: string[] = [];
+    const warnings: string[] = [];
 
-  // Check if AMI changed
-  if (changedFields.includes('ami')) {
-    warnings.push('AMI Choice');
+    // Check if AMI changed
+    if (changedFields.includes('ami')) {
+      warnings.push('AMI Choice');
+    }
+
+    // Check if lifecycle changed
+    if (changedFields.includes('lifecycle')) {
+      warnings.push('Lifecycle');
+    }
+
+    // Check if serverSize changed AND lifecycle is "spot"
+    if (
+      changedFields.includes('serverSize') &&
+      this.originalFormValue.lifecycle === 'spot'
+    ) {
+      warnings.push('Server Size');
+    }
+
+    return warnings;
   }
-
-  // Check if lifecycle changed
-  if (changedFields.includes('lifecycle')) {
-    warnings.push('Lifecycle');
-  }
-
-  // Check if serverSize changed AND lifecycle is "spot"
-  if (changedFields.includes('serverSize') && this.originalFormValue.lifecycle === 'spot') {
-    warnings.push('Server Size');
-  }
-
-  return warnings;
-}
 
   private showChangeWarningDialog(warnings: string[]): Promise<boolean> {
     const dialogRef = this.dialog.open(EditConfirmationDialogComponent, {
-      data: { 
-        fields: warnings
-      }
+      data: {
+        fields: warnings,
+      },
     });
-    
+
     return dialogRef.afterClosed().toPromise();
   }
 

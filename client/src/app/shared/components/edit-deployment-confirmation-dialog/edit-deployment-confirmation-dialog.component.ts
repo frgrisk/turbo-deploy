@@ -10,9 +10,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 
-
 export interface EditConfirmationData {
-    fields: string[]
+  fields: string[];
 }
 
 @Component({
@@ -26,7 +25,6 @@ export interface EditConfirmationData {
     MatIconModule,
     MatButtonModule,
     MatDialogModule,
-
   ],
   templateUrl: './edit-deployment-confirmation-dialog.component.html',
   styleUrls: ['./edit-deployment-confirmation-dialog.component.scss'],

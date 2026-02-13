@@ -1,15 +1,20 @@
 // edit-deployment-confirmation-dialog.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { EditConfirmationDialogComponent, EditConfirmationData } from './edit-deployment-confirmation-dialog.component';
+import {
+  EditConfirmationDialogComponent,
+  EditConfirmationData,
+} from './edit-deployment-confirmation-dialog.component';
 
 describe('EditConfirmationDialogComponent', () => {
   let component: EditConfirmationDialogComponent;
   let fixture: ComponentFixture<EditConfirmationDialogComponent>;
-  let dialogRefSpy: jasmine.SpyObj<MatDialogRef<EditConfirmationDialogComponent>>;
+  let dialogRefSpy: jasmine.SpyObj<
+    MatDialogRef<EditConfirmationDialogComponent>
+  >;
 
   const mockDialogData: EditConfirmationData = {
-    fields: ['Server Size', 'Lifecycle']
+    fields: ['Server Size', 'Lifecycle'],
   };
 
   beforeEach(async () => {
@@ -54,7 +59,9 @@ describe('EditConfirmationDialogComponent', () => {
 
     it('should close when Terminate & Continue button is clicked', () => {
       const compiled = fixture.nativeElement as HTMLElement;
-      const confirmButton = compiled.querySelector('button[color="warn"]') as HTMLButtonElement;
+      const confirmButton = compiled.querySelector(
+        'button[color="warn"]',
+      ) as HTMLButtonElement;
       confirmButton.click();
       expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
     });
@@ -68,7 +75,9 @@ describe('EditConfirmationDialogComponent', () => {
 
     it('should close when Cancel button is clicked', () => {
       const compiled = fixture.nativeElement as HTMLElement;
-      const cancelButton = compiled.querySelector('button:not([color="warn"])') as HTMLButtonElement;
+      const cancelButton = compiled.querySelector(
+        'button:not([color="warn"])',
+      ) as HTMLButtonElement;
       cancelButton.click();
       expect(dialogRefSpy.close).toHaveBeenCalledWith(false);
     });
