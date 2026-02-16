@@ -60,7 +60,9 @@
                     <mat-error>AMI is required</mat-error>
                   }
                   @if (deploymentForm.get("ami")?.hasError("invalidAmi")) {
-                    <mat-error>Please select a valid AMI from the list</mat-error>
+                    <mat-error
+                      >Please select a valid AMI from the list</mat-error
+                    >
                   }
                 </mat-form-field>
                 <mat-form-field floatLabel="always" appearance="outline">
