@@ -88,8 +88,8 @@ export class EditDeploymentComponent {
       ]),
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [
-        Validators.required, 
-        this.amiAutocomplete.validator(() => this.amis)
+        Validators.required,
+        this.amiAutocomplete.validator(() => this.amis),
       ]),
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
@@ -152,11 +152,15 @@ export class EditDeploymentComponent {
 
         this.currentExpiry = convertDateTime(response.TimeToExpire);
 
-        this.filteredAmis$ = this.amiAutocomplete.setup(this.editDeploymentForm, this.amis);
+        this.filteredAmis$ = this.amiAutocomplete.setup(
+          this.editDeploymentForm,
+          this.amis,
+        );
       });
   }
 
-  displayAmi = (amiId: string) => this.amiAutocomplete.display(this.amis)(amiId);
+  displayAmi = (amiId: string) =>
+    this.amiAutocomplete.display(this.amis)(amiId);
 
   submitForm() {
     const changedFields = this.getChangedFields();

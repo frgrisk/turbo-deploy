@@ -81,8 +81,8 @@ export class CreateDeploymentComponent implements OnInit {
       ]),
       region: new FormControl('', [Validators.required]),
       ami: new FormControl('', [
-        Validators.required, 
-        this.amiAutocomplete.validator(() => this.amis)
+        Validators.required,
+        this.amiAutocomplete.validator(() => this.amis),
       ]),
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
@@ -117,11 +117,15 @@ export class CreateDeploymentComponent implements OnInit {
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0].amiIds);
       this.deploymentForm.get('region')?.patchValue(this.region);
-      this.filteredAmis$ = this.amiAutocomplete.setup(this.deploymentForm, this.amis);
+      this.filteredAmis$ = this.amiAutocomplete.setup(
+        this.deploymentForm,
+        this.amis,
+      );
     });
   }
 
-  displayAmi = (amiId: string) => this.amiAutocomplete.display(this.amis)(amiId);
+  displayAmi = (amiId: string) =>
+    this.amiAutocomplete.display(this.amis)(amiId);
 
   resetExpiryForm() {
     this.deploymentForm.get('ttlValue')?.patchValue('', { emitEvent: false });

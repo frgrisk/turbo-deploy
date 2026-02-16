@@ -46,18 +46,23 @@
                     [matAutocomplete]="amiAuto"
                     placeholder="Search by AMI ID or name..."
                   />
-                  <mat-autocomplete #amiAuto="matAutocomplete" [displayWith]="displayAmi.bind(this)">
+                  <mat-autocomplete
+                    #amiAuto="matAutocomplete"
+                    [displayWith]="displayAmi.bind(this)"
+                  >
                     @for (ami of filteredAmis$ | async; track ami.amiIds) {
                       <mat-option [value]="ami.amiIds">
                         ({{ ami.amiIds }}) {{ ami.amiNames }}
                       </mat-option>
                     }
                   </mat-autocomplete>
-                  @if (deploymentForm.get('ami')?.hasError('required')) {
+                  @if (deploymentForm.get("ami")?.hasError("required")) {
                     <mat-error>AMI is required</mat-error>
                   }
-                  @if (deploymentForm.get('ami')?.hasError('invalidAmi')) {
-                    <mat-error>Please select a valid AMI from the list</mat-error>
+                  @if (deploymentForm.get("ami")?.hasError("invalidAmi")) {
+                    <mat-error
+                      >Please select a valid AMI from the list</mat-error
+                    >
                   }
                 </mat-form-field>
                 <mat-form-field floatLabel="always" appearance="outline">
