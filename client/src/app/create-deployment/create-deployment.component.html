@@ -40,13 +40,30 @@
               <div style="display: flex; flex-direction: column">
                 <mat-form-field floatLabel="always" appearance="outline">
                   <mat-label>AMI Choice</mat-label>
-                  <mat-select formControlName="ami">
-                    @for (ami of amis; track ami) {
-                      <mat-option [value]="ami.amiIds"
-                        >({{ ami.amiIds }}) {{ ami.amiNames }}</mat-option
-                      >
+                  <input
+                    matInput
+                    formControlName="ami"
+                    [matAutocomplete]="amiAuto"
+                    placeholder="Search by AMI ID or name..."
+                  />
+                  <mat-autocomplete
+                    #amiAuto="matAutocomplete"
+                    [displayWith]="displayAmi.bind(this)"
+                  >
+                    @for (ami of filteredAmis$ | async; track ami.amiIds) {
+                      <mat-option [value]="ami.amiIds">
+                        ({{ ami.amiIds }}) {{ ami.amiNames }}
+                      </mat-option>
                     }
-                  </mat-select>
+                  </mat-autocomplete>
+                  @if (deploymentForm.get("ami")?.hasError("required")) {
+                    <mat-error>AMI is required</mat-error>
+                  }
+                  @if (deploymentForm.get("ami")?.hasError("invalidAmi")) {
+                    <mat-error
+                      >Please select a valid AMI from the list</mat-error
+                    >
+                  }
                 </mat-form-field>
                 <mat-form-field floatLabel="always" appearance="outline">
                   <mat-label>Server Size</mat-label>

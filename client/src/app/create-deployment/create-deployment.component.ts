@@ -15,8 +15,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterModule } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Subject } from 'rxjs';
-
+import { AsyncPipe } from '@angular/common';
+import { Observable, Subject } from 'rxjs';
 import { ApiService } from '../shared/services/api.service';
 import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
@@ -26,6 +26,8 @@ import {
   onNumericKeyPress,
   onNumericPaste,
 } from '../shared/util/numeric-input.util';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { AmiAutocompleteService } from '../shared/services/ami-autocomplete.service';
 
 @Component({
   selector: 'app-create-deployment',
@@ -40,7 +42,9 @@ import {
     MatProgressBarModule,
     MatSnackBarModule,
     MatIconModule,
+    MatAutocompleteModule,
     MatProgressSpinnerModule,
+    AsyncPipe,
   ],
   templateUrl: './create-deployment.component.html',
   styleUrls: ['./create-deployment.component.scss'],
@@ -55,11 +59,13 @@ export class CreateDeploymentComponent implements OnInit {
   region: string = '';
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
+  filteredAmis$!: Observable<AmiAttr[]>;
 
   constructor(
     public apiService: ApiService,
     private router: Router,
     private _snackBar: MatSnackBar,
+    private amiAutocomplete: AmiAutocompleteService,
   ) {}
 
   ngOnInit() {
@@ -74,7 +80,10 @@ export class CreateDeploymentComponent implements OnInit {
         Validators.pattern('[a-zA-Z0-9-_]*'),
       ]),
       region: new FormControl('', [Validators.required]),
-      ami: new FormControl('', [Validators.required]),
+      ami: new FormControl('', [
+        Validators.required,
+        this.amiAutocomplete.validator(() => this.amis),
+      ]),
       serverSize: new FormControl('', [Validators.required]),
       userData: new FormControl([]),
       lifecycle: new FormControl(Lifecycle.SPOT, [Validators.required]),
@@ -108,8 +117,15 @@ export class CreateDeploymentComponent implements OnInit {
       this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
       this.deploymentForm.get('ami')?.patchValue(this.amis[0].amiIds);
       this.deploymentForm.get('region')?.patchValue(this.region);
+      this.filteredAmis$ = this.amiAutocomplete.setup(
+        this.deploymentForm,
+        this.amis,
+      );
     });
   }
+
+  displayAmi = (amiId: string) =>
+    this.amiAutocomplete.display(this.amis)(amiId);
 
   resetExpiryForm() {
     this.deploymentForm.get('ttlValue')?.patchValue('', { emitEvent: false });
