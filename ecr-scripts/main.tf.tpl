@@ -29,10 +29,10 @@ variable "aws_region" {
   default     = "${AWS_REGION_CUSTOM}"
 }
 
-variable "security_group_id" {
-  description = "ID of the security group associated with EC2 deployment"
-  type        = string
-  default     = "${SECURITY_GROUP_ID}"
+variable "security_group_ids" {
+  description = "IDs of the security groups associated with EC2 deployment"
+  type        = list(string)
+  default     = ${SECURITY_GROUP_IDS}
 }
 
 variable "public_subnet_id" {
