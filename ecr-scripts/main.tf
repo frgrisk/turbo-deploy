@@ -31,10 +31,10 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "security_group_id" {
-  description = "id of security group associated with ec2 deployment"
-  type        = string
-  default     = ""
+variable "security_group_ids" {
+  description = "IDs of the security groups associated with EC2 deployment"
+  type        = list(string)
+  default     = []
 }
 
 variable "public_subnet_id" {
@@ -55,7 +55,7 @@ data "aws_route53_zone" "hosted_zone" {
 }
 
 data "aws_s3_object" "user_data_base" {
-  bucket = "${S3_BUCKET_NAME}"
+  bucket = S3_BUCKET_NAME
   key    = "user-data-base/base.sh"
 }
 
@@ -73,9 +73,9 @@ data "cloudinit_config" "full_script" {
   base64_encode = false
 
   part {
-      filename     = "base.sh"
-      content_type = "text/x-shellscript"
-      content      = data.aws_s3_object.user_data_base.body
+    filename     = "base.sh"
+    content_type = "text/x-shellscript"
+    content      = data.aws_s3_object.user_data_base.body
   }
 
   dynamic "part" {
