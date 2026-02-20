@@ -33,7 +33,7 @@ resource "aws_route53_record" "on_demand_record" {
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = replace(each.value.tags_all.Name, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
-  records  = [each.value.private_ip]
+  records = [coalesce(each.value.public_ip, each.value.private_ip)]
   ttl      = "60"
 }
 
@@ -116,6 +116,6 @@ resource "aws_route53_record" "spot_record" {
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = replace(each.value.tags_all.Name, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
-  records  = [each.value.private_ip]
+  records = [coalesce(each.value.public_ip, each.value.private_ip)]
   ttl      = "60"
 }
