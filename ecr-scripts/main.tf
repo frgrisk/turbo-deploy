@@ -49,6 +49,12 @@ variable "hosted_zone_id" {
   default     = ""
 }
 
+variable "instance_profile" {
+  description = "Name of the instance profile to assign to the Turbo Deployed instances"
+  type        = string
+  default     = ""
+}
+
 data "aws_route53_zone" "hosted_zone" {
   zone_id      = ""
   private_zone = false
@@ -92,8 +98,4 @@ data "cloudinit_config" "full_script" {
 data "aws_key_pair" "admin_key" {
   key_name           = ""
   include_public_key = true
-}
-
-data "aws_iam_instance_profile" "instance_profile" {
-  name = ""
 }

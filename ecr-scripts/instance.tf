@@ -14,7 +14,7 @@ resource "aws_instance" "my_deployed_on_demand_instances" {
   subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids      = local.use_custom_security_groups ? var.security_group_ids : null
   key_name                    = data.aws_key_pair.admin_key.key_name
-  iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
+  iam_instance_profile        = var.instance_profile
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
   user_data_replace_on_change = false
 
@@ -48,7 +48,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
   subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
   vpc_security_group_ids      = local.use_custom_security_groups ? var.security_group_ids : null
   key_name                    = data.aws_key_pair.admin_key.key_name
-  iam_instance_profile        = data.aws_iam_instance_profile.instance_profile.name
+  iam_instance_profile        = var.instance_profile
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
   user_data_replace_on_change = false
 
