@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -24,8 +25,10 @@ import (
 	"github.com/frgrisk/turbo-deploy/server/instance"
 	"github.com/frgrisk/turbo-deploy/server/models"
 	"github.com/frgrisk/turbo-deploy/server/timeutil"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -37,17 +40,17 @@ func init() {
 	gin.SetMode(gin.ReleaseMode)
 	r = gin.Default()
 
-	// // construct hostname for cors
-	// domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
-	// hostEnv := os.Getenv("WEBSERVER_HOSTNAME")
-	// httpPortEnv := os.Getenv("WEBSERVER_HTTP_PORT")
-	// httpsPortEnv := os.Getenv("WEBSERVER_HTTPS_PORT")
-	// fullName := fmt.Sprintf("%s.%s", hostEnv, domainEnv)
+	// construct hostname for cors
+	domainEnv := os.Getenv("ROUTE53_DOMAIN_NAME")
+	hostEnv := os.Getenv("WEBSERVER_HOSTNAME")
+	httpPortEnv := os.Getenv("WEBSERVER_HTTP_PORT")
+	httpsPortEnv := os.Getenv("WEBSERVER_HTTPS_PORT")
+	fullName := fmt.Sprintf("%s.%s", hostEnv, domainEnv)
 
-	// // setup allowed origins
-	// config := cors.DefaultConfig()
-	// config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv), fmt.Sprintf("https://%s", fullName), fmt.Sprintf("https://%s", fullName)}
-	// r.Use(cors.New(config))
+	// setup allowed origins
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{fmt.Sprintf("http://%s:%s", fullName, httpPortEnv), fmt.Sprintf("https://%s:%s", fullName, httpsPortEnv), fmt.Sprintf("https://%s", fullName), fmt.Sprintf("https://%s", fullName)}
+	r.Use(cors.New(config))
 
 	SetupRoutes(r)
 	ginLambda = ginadapter.New(r)
@@ -307,19 +310,31 @@ func GetAWSData(c *gin.Context) {
 		config[regionName] = region
 	}
 
+	// Get the available AMIs from each region
 	response := models.RegionConfigResponse{}
+	var mutex sync.Mutex
+	g := new(errgroup.Group)
 	for regionName, region := range config {
-		amis, err := instance.GetAvailableAmis(region.AMIFilters, regionName)
-		if err != nil {
-			log.Printf("Failed to get AMIs for region %s: %v", regionName, err)
-			abortWithLog(c, http.StatusInternalServerError, err)
-			return
-		}
+		g.Go(func() error {
+			amis, err := instance.GetAvailableAmis(region.AMIFilters, regionName)
+			if err != nil {
+				log.Printf("Failed to get AMIs for region %s: %v", regionName, err)
+				return err
+			}
 
-		response[regionName] = models.RegionResponse{
-			Ami:           amis,
-			InstanceTypes: region.InstanceTypes,
-		}
+			mutex.Lock()
+			defer mutex.Unlock()
+			response[regionName] = models.RegionResponse{
+				Ami:           amis,
+				InstanceTypes: region.InstanceTypes,
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
 	}
 
 	var userScripts []string
