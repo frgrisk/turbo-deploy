@@ -338,7 +338,8 @@ func GetAWSData(c *gin.Context) {
 
 func abortWithLog(c *gin.Context, statusCode int, err error) {
 	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
-		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr) //nolint:G706
+		//nolint:gosec
+		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
 	}
 }
 
