@@ -86,8 +86,3 @@ data "cloudinit_config" "full_script" {
     }
   }
 }
-
-data "aws_key_pair" "admin_key" {
-  key_name           = ""
-  include_public_key = true
-}
