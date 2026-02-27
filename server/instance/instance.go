@@ -21,129 +21,129 @@ import (
 )
 
 var (
-    ec2Client  *ec2.Client
-    ec2Clients map[string]*ec2.Client
+	ec2Clients map[string]*ec2.Client
 )
 
 func init() {
-    cfg, err := config.LoadDefaultConfig(context.Background())
-    if err != nil {
-        log.Printf("unable to load SDK config %v", err)
-    }
-
-    // default client using Lambda's own region
-    ec2Client = ec2.NewFromConfig(cfg)
+	cfg, err := config.LoadDefaultConfig(context.Background())
+	if err != nil {
+		log.Printf("unable to load SDK config %v", err)
+	}
 
 	// region specific-clients
-    deploymentEnv := os.Getenv("DEPLOYMENT_CONFIG")
+	deploymentEnv := os.Getenv("DEPLOYMENT_CONFIG")
 
-    decodedDeploymentEnv, _ := decode.Base64Gzip(deploymentEnv)
+	decodedDeploymentEnv, _ := decode.Base64Gzip(deploymentEnv)
 
-    var regionConfig models.RegionConfig
-    json.Unmarshal([]byte(decodedDeploymentEnv), &regionConfig)
+	var regionConfig models.RegionConfig
+	err = json.Unmarshal([]byte(decodedDeploymentEnv), &regionConfig)
+	if err != nil {
+		log.Printf("Error parsing deployment configuration: %v", err)
+		return
+	}
 
-    ec2Clients = make(map[string]*ec2.Client)
-    for regionName := range regionConfig {
-        ec2Clients[regionName] = ec2.NewFromConfig(cfg, func(o *ec2.Options) {
-            o.Region = regionName
-        })
-    }
+	ec2Clients = make(map[string]*ec2.Client)
+	for regionName := range regionConfig {
+		ec2Clients[regionName] = ec2.NewFromConfig(cfg, func(o *ec2.Options) {
+			o.Region = regionName
+		})
+	}
 }
 
 func GetDeployedInstances() ([]models.DeploymentResponse, error) {
-    g := new(errgroup.Group)
-    var mutex sync.Mutex
-    var deployments []models.DeploymentResponse
+	g := new(errgroup.Group)
+	var mutex sync.Mutex
+	var deployments []models.DeploymentResponse
 
-    for regionName, client := range ec2Clients {
-        g.Go(func() error {
-            results, err := getDeployedInstancesForRegion(regionName, client)
-            if err != nil {
-                return err
-            }
-            mutex.Lock()
-            defer mutex.Unlock()
-            deployments = append(deployments, results...)
-            return nil
-        })
-    }
+	for regionName, client := range ec2Clients {
+		g.Go(func() error {
+			results, err := getDeployedInstancesForRegion(regionName, client)
+			if err != nil {
+				return err
+			}
+			mutex.Lock()
+			defer mutex.Unlock()
+			deployments = append(deployments, results...)
+			return nil
+		})
+	}
 
-    if err := g.Wait(); err != nil {
-        return nil, err
-    }
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
 
-    return deployments, nil
+	return deployments, nil
 }
 
 func getDeployedInstancesForRegion(regionName string, client *ec2.Client) ([]models.DeploymentResponse, error) {
-    input := &ec2.DescribeInstancesInput{
-        Filters: []types.Filter{
-            {
-                Name:   aws.String("tag:DeployedBy"),
-                Values: []string{"turbo-deploy"},
-            },
-            {
-                Name:   aws.String("instance-state-name"),
-                Values: []string{"pending", "running", "stopping", "stopped"},
-            },
-        },
-    }
+	input := &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{
+				Name:   aws.String("tag:DeployedBy"),
+				Values: []string{"turbo-deploy"},
+			},
+			{
+				Name:   aws.String("instance-state-name"),
+				Values: []string{"pending", "running", "stopping", "stopped"},
+			},
+		},
+	}
 
-    var deployments []models.DeploymentResponse
+	var deployments []models.DeploymentResponse
 
-    paginator := ec2.NewDescribeInstancesPaginator(client, input)
-    for paginator.HasMorePages() {
-        output, err := paginator.NextPage(context.Background())
-        if err != nil {
-            return nil, err
-        }
+	paginator := ec2.NewDescribeInstancesPaginator(client, input)
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
 
-        for _, reservation := range output.Reservations {
-            for _, instance := range reservation.Instances {
-                filter := []types.Filter{
-                    {
-                        Name:   aws.String("source-instance-id"),
-                        Values: []string{*instance.InstanceId},
-                    },
-                    {
-                        Name:   aws.String("is-public"),
-                        Values: []string{"false"},
-                    },
-                }
+		for _, reservation := range output.Reservations {
+			for _, instance := range reservation.Instances {
+				filter := []types.Filter{
+					{
+						Name:   aws.String("source-instance-id"),
+						Values: []string{*instance.InstanceId},
+					},
+					{
+						Name:   aws.String("is-public"),
+						Values: []string{"false"},
+					},
+				}
 
-                imageResult, err := GetImage(regionName, filter)
-                if err != nil {
-                    log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
-                    return nil, err
-                }
+				imageResult, err := GetImage(regionName, filter)
+				if err != nil {
+					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
+					return nil, err
+				}
 
-                var imageID string
-                if len(imageResult.Images) == 0 {
-                    imageID = "none"
-                } else {
-                    imageID = *imageResult.Images[0].ImageId
-                }
+				var imageID string
+				if len(imageResult.Images) == 0 {
+					imageID = "none"
+				} else {
+					imageID = *imageResult.Images[0].ImageId
+				}
 
-                deployment := models.DeploymentResponse{
-                    InstanceID:       aws.ToString(instance.InstanceId),
-                    DeploymentID:     getInstanceTagValue("DeploymentID", instance.Tags),
-                    Hostname:         getInstanceTagValue("Name", instance.Tags),
-                    TimeToExpire:     getInstanceTagValue("TimeToExpire", instance.Tags),
-                    SnapshotID:       imageID,
-                    Ami:              aws.ToString(instance.ImageId),
-                    ServerSize:       string(instance.InstanceType),
-                    AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
-                    Lifecycle:        getLifecycle(instance.InstanceLifecycle),
-                    Status:           string(instance.State.Name),
-                    UserData:         splitUserData(getInstanceTagValue("UserData", instance.Tags)),
-                }
+				deployment := models.DeploymentResponse{
+					InstanceID:       aws.ToString(instance.InstanceId),
+					DeploymentID:     getInstanceTagValue("DeploymentID", instance.Tags),
+					Hostname:         getInstanceTagValue("Name", instance.Tags),
+					TimeToExpire:     getInstanceTagValue("TimeToExpire", instance.Tags),
+					SnapshotID:       imageID,
+					Ami:              aws.ToString(instance.ImageId),
+					ServerSize:       string(instance.InstanceType),
+					AvailabilityZone: aws.ToString(instance.Placement.AvailabilityZone),
+					Lifecycle:        getLifecycle(instance.InstanceLifecycle),
+					Status:           string(instance.State.Name),
+					UserData:         splitUserData(getInstanceTagValue("UserData", instance.Tags)),
+				}
 
-                deployments = append(deployments, deployment)
-            }
-        }
-    }
+				deployments = append(deployments, deployment)
+			}
+		}
+	}
 
-    return deployments, nil
+	return deployments, nil
 }
 
 func splitUserData(userData string) []string {
@@ -296,11 +296,11 @@ func GetAvailableAmis(filterMap map[string][]types.Filter, region string) ([]mod
 }
 
 func GetImage(region string, filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
-    describeInstanceImage := &ec2.DescribeImagesInput{
-        Filters: filter,
-    }
+	describeInstanceImage := &ec2.DescribeImagesInput{
+		Filters: filter,
+	}
 
-    return ec2Clients[region].DescribeImages(context.Background(), describeInstanceImage)
+	return ec2Clients[region].DescribeImages(context.Background(), describeInstanceImage)
 }
 
 func DeregisterImage(imageID string, region string) error {

@@ -281,7 +281,7 @@ func GetAWSData(c *gin.Context) {
 	// get deployment configuration
 	err := json.Unmarshal([]byte(decodedDeploymentEnv), &config)
 	if err != nil {
-		log.Printf("Error parsing environment variable: %v", err)
+		log.Printf("Error parsing environment variable: %v", err) //nolint:G706
 		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -308,15 +308,15 @@ func GetAWSData(c *gin.Context) {
 	}
 
 	response := models.RegionConfigResponse{}
-		for regionName, region := range config {
-			amis, err := instance.GetAvailableAmis(region.AMIFilters, regionName)
-			if err != nil {
-				log.Printf("Failed to get AMIs for region %s: %v", regionName, err)
-				abortWithLog(c, http.StatusInternalServerError, err)
-				return
-			}
+	for regionName, region := range config {
+		amis, err := instance.GetAvailableAmis(region.AMIFilters, regionName)
+		if err != nil {
+			log.Printf("Failed to get AMIs for region %s: %v", regionName, err)
+			abortWithLog(c, http.StatusInternalServerError, err)
+			return
+		}
 
-			response[regionName] = models.RegionResponse{
+		response[regionName] = models.RegionResponse{
 			Ami:           amis,
 			InstanceTypes: region.InstanceTypes,
 		}
@@ -388,19 +388,19 @@ func GetDeployedRequest(c *gin.Context) {
 }
 
 func StartInstanceRequest(c *gin.Context) {
-    instanceID := c.Param("id")
-    region := c.Param("region")
+	instanceID := c.Param(pathParameterName)
+	region := c.Param("region")
 
-    if err := instance.StartInstance(instanceID, region); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+	if err := instance.StartInstance(instanceID, region); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-    c.Status(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
 func StopInstanceRequest(c *gin.Context) {
-	instanceID := c.Param("id")
+	instanceID := c.Param(pathParameterName)
 	region := c.Param("region")
 
 	if err := instance.StopInstance(instanceID, region); err != nil {
@@ -411,20 +411,18 @@ func StopInstanceRequest(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-const instanceParameterName = "instance_id"
-
 func CheckAMILimit(c *gin.Context) {
 	maxAMIsAllowed := 3
 
-	instanceId := c.Param("id")
+	instanceID := c.Param(pathParameterName)
 	region := c.Query("region")
-	log.Println("capture instance image request for instance:", instanceId)
+	log.Println("capture instance image request for instance:", instanceID)
 
 	// check if an image for that instance already exists
 	filter := []types.Filter{
 		{
 			Name:   aws.String("source-instance-id"),
-			Values: []string{instanceId},
+			Values: []string{instanceID},
 		},
 		{
 			Name:   aws.String("is-public"),
@@ -434,7 +432,7 @@ func CheckAMILimit(c *gin.Context) {
 
 	imageResult, err := instance.GetImage(region, filter)
 	if err != nil {
-		log.Printf("failed to resolve image for instance %s: %v", instanceId, err)
+		log.Printf("failed to resolve image for instance %s: %v", instanceID, err)
 	}
 
 	if len(imageResult.Images) >= maxAMIsAllowed {
@@ -466,7 +464,7 @@ func CheckAMILimit(c *gin.Context) {
 }
 
 func DeleteInstanceAMI(c *gin.Context) {
-	recordID := c.Param("id")
+	recordID := c.Param(pathParameterName)
 	region := c.Query("region")
 	imageID := c.Query("image_id")
 

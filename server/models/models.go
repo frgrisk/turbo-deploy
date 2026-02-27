@@ -39,20 +39,20 @@ type Payload struct {
 type RegionConfig map[string]Region
 
 type Region struct {
-    AMIFilters    map[string][]types.Filter `json:"ami_filter_groups"`
-    InstanceTypes []string                  `json:"instance_types"`
+	AMIFilters    map[string][]types.Filter `json:"ami_filter_groups"`
+	InstanceTypes []string                  `json:"instance_types"`
 }
 
 type RegionConfigResponse map[string]RegionResponse
 
 type RegionResponse struct {
-	Ami   		  []AmiAttr `json:"amis"`
+	Ami           []AmiAttr `json:"amis"`
 	InstanceTypes []string  `json:"instance_types"`
 }
 
 type LaunchResponse struct {
-    Regions     RegionConfigResponse `json:"regions"`
-    UserScripts []string             `json:"user_scripts"`
+	Regions     RegionConfigResponse `json:"regions"`
+	UserScripts []string             `json:"user_scripts"`
 }
 
 type Config struct {
