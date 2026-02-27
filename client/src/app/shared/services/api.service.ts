@@ -83,25 +83,34 @@ export class ApiService {
 
   startInstance(payloadID: string, region: string): Observable<any> {
     return this.http
-      .post(`${environment.apiBaseUrl}/start-instance/${region}/${payloadID}`, null)
+      .post(
+        `${environment.apiBaseUrl}/start-instance/${region}/${payloadID}`,
+        null,
+      )
       .pipe(catchError(this.handleError.bind(this)));
   }
 
   stopInstance(payloadID: string, region: string): Observable<any> {
     return this.http
-      .post(`${environment.apiBaseUrl}/stop-instance/${region}/${payloadID}`, null)
+      .post(
+        `${environment.apiBaseUrl}/stop-instance/${region}/${payloadID}`,
+        null,
+      )
       .pipe(catchError(this.handleError.bind(this)));
   }
 
   checkAmiLimit(instanceID: string, region: string): Observable<any> {
-    const params = new HttpParams()
-      .set('region', region);
+    const params = new HttpParams().set('region', region);
     return this.http
       .get(`${environment.apiBaseUrl}/instance-ami/${instanceID}`, { params })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
-  deleteInstanceAmi(recordID: string, region: string, imageID: string): Observable<any> {
+  deleteInstanceAmi(
+    recordID: string,
+    region: string,
+    imageID: string,
+  ): Observable<any> {
     const params = new HttpParams()
       .set('region', region)
       .set('image_id', imageID);
@@ -112,10 +121,7 @@ export class ApiService {
 
   captureInstanceAmi(payload: any): Observable<any> {
     return this.http
-      .put(
-        `${environment.apiBaseUrl}/instance-ami/${payload.id}`,
-        payload,
-      )
+      .put(`${environment.apiBaseUrl}/instance-ami/${payload.id}`, payload)
       .pipe(catchError(this.handleError.bind(this)));
   }
 }

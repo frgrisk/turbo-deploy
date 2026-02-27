@@ -18,7 +18,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AsyncPipe, KeyValuePipe } from '@angular/common';
 import { Observable, Subject, startWith, map } from 'rxjs';
 import { ApiService } from '../shared/services/api.service';
-import { Lifecycle, TimeUnit, AmiAttr, RegionData } from '../shared/enum/dropdown.enum';
+import {
+  Lifecycle,
+  TimeUnit,
+  AmiAttr,
+  RegionData,
+} from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { convertToHours } from '../shared/util/time.util';
 import {
@@ -122,26 +127,29 @@ export class CreateDeploymentComponent implements OnInit {
       let isFirstEmit = true;
 
       // listen to region changes
-      this.deploymentForm.get('region')?.valueChanges.pipe(
-        startWith(defaultRegion)
-      ).subscribe(selectedRegion => {
-        const regionData = this.regionConfig[selectedRegion];
-        this.amis = regionData.amis;
-        this.serverSizes = regionData.instance_types;
+      this.deploymentForm
+        .get('region')
+        ?.valueChanges.pipe(startWith(defaultRegion))
+        .subscribe((selectedRegion) => {
+          const regionData = this.regionConfig[selectedRegion];
+          this.amis = regionData.amis;
+          this.serverSizes = regionData.instance_types;
 
-        this.deploymentForm.get('serverSize')?.patchValue(this.serverSizes[0]);
+          this.deploymentForm
+            .get('serverSize')
+            ?.patchValue(this.serverSizes[0]);
 
-        if (isFirstEmit) {
-          isFirstEmit = false;
-        } else {
-          this.deploymentForm.get('ami')?.setValue('', { emitEvent: false });
-        }
+          if (isFirstEmit) {
+            isFirstEmit = false;
+          } else {
+            this.deploymentForm.get('ami')?.setValue('', { emitEvent: false });
+          }
 
-        this.filteredAmis$ = this.amiAutocomplete.setup(
-          this.deploymentForm,
-          this.amis,
-        );
-      });
+          this.filteredAmis$ = this.amiAutocomplete.setup(
+            this.deploymentForm,
+            this.amis,
+          );
+        });
     });
   }
 

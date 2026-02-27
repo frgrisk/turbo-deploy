@@ -15,10 +15,24 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
-import { Observable, Subject, filter, switchMap, takeUntil, tap, startWith, map } from 'rxjs';
+import {
+  Observable,
+  Subject,
+  filter,
+  switchMap,
+  takeUntil,
+  tap,
+  startWith,
+  map,
+} from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe, KeyValuePipe } from '@angular/common';
-import { Lifecycle, TimeUnit, AmiAttr, RegionData } from '../shared/enum/dropdown.enum';
+import {
+  Lifecycle,
+  TimeUnit,
+  AmiAttr,
+  RegionData,
+} from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { ApiService } from '../shared/services/api.service';
 import { DeploymentsService } from '../shared/services/deployments.service';
@@ -150,24 +164,27 @@ export class EditDeploymentComponent {
         // listen to region changes and update amis and serverSizes
         let isFirstEmit = true;
 
-        this.editDeploymentForm.get('region')?.valueChanges.pipe(
-          startWith(response.Region)
-        ).subscribe(selectedRegion => {
-          const regionData = this.regionConfig[selectedRegion];
-          this.amis = regionData.amis;
-          this.serverSizes = regionData.instance_types;
+        this.editDeploymentForm
+          .get('region')
+          ?.valueChanges.pipe(startWith(response.Region))
+          .subscribe((selectedRegion) => {
+            const regionData = this.regionConfig[selectedRegion];
+            this.amis = regionData.amis;
+            this.serverSizes = regionData.instance_types;
 
-          if (isFirstEmit) {
-            isFirstEmit = false;
-          } else {
-            this.editDeploymentForm.get('ami')?.setValue('', { emitEvent: false });
-          }
+            if (isFirstEmit) {
+              isFirstEmit = false;
+            } else {
+              this.editDeploymentForm
+                .get('ami')
+                ?.setValue('', { emitEvent: false });
+            }
 
-          this.filteredAmis$ = this.amiAutocomplete.setup(
-            this.editDeploymentForm,
-            this.amis,
-          );
-        });
+            this.filteredAmis$ = this.amiAutocomplete.setup(
+              this.editDeploymentForm,
+              this.amis,
+            );
+          });
 
         // Store original values
         this.originalFormValue = this.editDeploymentForm.getRawValue();
