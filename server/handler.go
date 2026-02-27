@@ -520,8 +520,6 @@ func CaptureInstanceAMI(c *gin.Context) {
 		return
 	}
 
-	log.Print("After snapshot")
-
 	timeToLive, err := strconv.ParseInt(req.TimeToExpire, 10, 64)
 	if err != nil {
 		log.Printf("Failed to parse ttl with error %v", err)
