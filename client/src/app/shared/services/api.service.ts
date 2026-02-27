@@ -82,20 +82,16 @@ export class ApiService {
   }
 
   startInstance(payloadID: string, region: string): Observable<any> {
+    const params = new HttpParams().set('region', region);
     return this.http
-      .post(
-        `${environment.apiBaseUrl}/start-instance/${region}/${payloadID}`,
-        null,
-      )
+      .post(`${environment.apiBaseUrl}/start-instance/${payloadID}`, null, { params })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
   stopInstance(payloadID: string, region: string): Observable<any> {
+    const params = new HttpParams().set('region', region);
     return this.http
-      .post(
-        `${environment.apiBaseUrl}/stop-instance/${region}/${payloadID}`,
-        null,
-      )
+      .post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null, { params })
       .pipe(catchError(this.handleError.bind(this)));
   }
 

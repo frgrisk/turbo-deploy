@@ -78,8 +78,8 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Deployed EC2 Instances
 	r.GET("/deployments", GetDeployedRequest)
-	r.POST("/start-instance/:region/:id", StartInstanceRequest)
-	r.POST("/stop-instance/:region/:id", StopInstanceRequest)
+	r.POST("/start-instance/:id", StartInstanceRequest)
+	r.POST("/stop-instance/:id", StopInstanceRequest)
 
 	// AWS Data requests
 	r.GET("/awsdata", GetAWSData)
@@ -390,7 +390,7 @@ func GetDeployedRequest(c *gin.Context) {
 
 func StartInstanceRequest(c *gin.Context) {
 	instanceID := c.Param(pathParameterName)
-	region := c.Param("region")
+	region := c.Query("region")
 
 	if err := instance.StartInstance(instanceID, region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -402,7 +402,7 @@ func StartInstanceRequest(c *gin.Context) {
 
 func StopInstanceRequest(c *gin.Context) {
 	instanceID := c.Param(pathParameterName)
-	region := c.Param("region")
+	region := c.Query("region")
 
 	if err := instance.StopInstance(instanceID, region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
