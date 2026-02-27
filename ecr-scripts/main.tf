@@ -15,6 +15,10 @@ terraform {
   }
 }
 
+locals {
+  network_config = jsondecode(base64decode(""))
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -29,18 +33,6 @@ variable "aws_region" {
   description = "The AWS region to deploy resources into"
   type        = string
   default     = "us-east-1"
-}
-
-variable "security_group_ids" {
-  description = "IDs of the security groups associated with EC2 deployment"
-  type        = list(string)
-  default     = []
-}
-
-variable "public_subnet_id" {
-  description = "ids of public subnet associated with ec2 deployment"
-  type        = string
-  default     = ""
 }
 
 variable "hosted_zone_id" {
@@ -93,9 +85,4 @@ data "cloudinit_config" "full_script" {
       content      = data.aws_s3_object.user_data_script[name.value].body
     }
   }
-}
-
-data "aws_key_pair" "admin_key" {
-  key_name           = ""
-  include_public_key = true
 }

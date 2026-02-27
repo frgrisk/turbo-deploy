@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Observable, catchError, delay, finalize, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ErrorDialogComponent } from '../components/error-dialog/error-dialog.component';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -80,38 +81,47 @@ export class ApiService {
       );
   }
 
-  startInstance(payloadID: string): Observable<any> {
+  startInstance(payloadID: string, region: string): Observable<any> {
+    const params = new HttpParams().set('region', region);
     return this.http
-      .post(`${environment.apiBaseUrl}/start-instance/${payloadID}`, null)
+      .post(`${environment.apiBaseUrl}/start-instance/${payloadID}`, null, {
+        params,
+      })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
-  stopInstance(payloadID: string): Observable<any> {
+  stopInstance(payloadID: string, region: string): Observable<any> {
+    const params = new HttpParams().set('region', region);
     return this.http
-      .post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null)
+      .post(`${environment.apiBaseUrl}/stop-instance/${payloadID}`, null, {
+        params,
+      })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
-  checkAmiLimit(payload: any): Observable<any> {
+  checkAmiLimit(instanceID: string, region: string): Observable<any> {
+    const params = new HttpParams().set('region', region);
     return this.http
-      .get(`${environment.apiBaseUrl}/instance-ami/${payload}/check-limit`)
+      .get(`${environment.apiBaseUrl}/instance-ami/${instanceID}`, { params })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
-  deleteInstanceAmi(payload: any): Observable<any> {
+  deleteInstanceAmi(
+    recordID: string,
+    region: string,
+    imageID: string,
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('region', region)
+      .set('image_id', imageID);
     return this.http
-      .delete(
-        `${environment.apiBaseUrl}/instance-ami/${payload.instance_id}/${payload.image_id}`,
-      )
+      .delete(`${environment.apiBaseUrl}/instance-ami/${recordID}`, { params })
       .pipe(catchError(this.handleError.bind(this)));
   }
 
   captureInstanceAmi(payload: any): Observable<any> {
     return this.http
-      .put(
-        `${environment.apiBaseUrl}/instance-ami/${payload.id}/capture`,
-        payload,
-      )
+      .put(`${environment.apiBaseUrl}/instance-ami/${payload.id}`, payload)
       .pipe(catchError(this.handleError.bind(this)));
   }
 }

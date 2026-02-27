@@ -1,5 +1,7 @@
 package models
 
+import "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+
 type DynamoDBData struct {
 	ID                string   `dynamodbav:"id"`
 	Ami               string   `dynamodbav:"ami"`
@@ -32,6 +34,25 @@ type Payload struct {
 	TimeToExpire      string   `json:"timeToExpire"`
 	UserData          []string `json:"userData"`
 	TTLValue          int64    `json:"ttlValue"`
+}
+
+type RegionConfig map[string]Region
+
+type Region struct {
+	AMIFilters    map[string][]types.Filter `json:"ami_filter_groups"`
+	InstanceTypes []string                  `json:"instance_types"`
+}
+
+type RegionConfigResponse map[string]RegionResponse
+
+type RegionResponse struct {
+	Ami           []AmiAttr `json:"amis"`
+	InstanceTypes []string  `json:"instance_types"`
+}
+
+type LaunchResponse struct {
+	Regions     RegionConfigResponse `json:"regions"`
+	UserScripts []string             `json:"user_scripts"`
 }
 
 type Config struct {

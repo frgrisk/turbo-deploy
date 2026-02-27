@@ -153,17 +153,26 @@ export class DeploymentDashboardComponent {
     element.loading = true;
     this.currentlyPolling = true;
 
-    this.apiService.startInstance(element.ec2InstanceId).subscribe(() => {
-      this.pollInstanceStatus(element.ec2InstanceId, 'running', 2000);
-    });
+    const region = element.availabilityZone.slice(0, -1);
+
+    this.apiService
+      .startInstance(element.ec2InstanceId, region)
+      .subscribe(() => {
+        this.pollInstanceStatus(element.ec2InstanceId, 'running', 2000);
+      });
   }
 
   stopInstance(element: any) {
     element.loading = true;
     this.currentlyPolling = true;
-    this.apiService.stopInstance(element.ec2InstanceId).subscribe(() => {
-      this.pollInstanceStatus(element.ec2InstanceId, 'stopped', 10000);
-    });
+
+    const region = element.availabilityZone.slice(0, -1);
+
+    this.apiService
+      .stopInstance(element.ec2InstanceId, region)
+      .subscribe(() => {
+        this.pollInstanceStatus(element.ec2InstanceId, 'stopped', 10000);
+      });
   }
 
   pollInstanceStatus(

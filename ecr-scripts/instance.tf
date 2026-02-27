@@ -1,19 +1,15 @@
-locals {
-  use_custom_subnet          = var.public_subnet_id != "" ? true : false
-  use_custom_security_groups = length(var.security_group_ids) > 0 ? true : false
-}
-
 resource "aws_instance" "my_deployed_on_demand_instances" {
   for_each = {
     for k, v in data.external.dynamodb_data.result : k => jsondecode(v)
     if jsondecode(v).lifecycle == "on-demand"
   }
 
+  region                      = each.value.region
   ami                         = each.value.ami
   instance_type               = each.value.serverSize
-  subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
-  vpc_security_group_ids      = local.use_custom_security_groups ? var.security_group_ids : null
-  key_name                    = data.aws_key_pair.admin_key.key_name
+  subnet_id                   = local.network_config[each.value.region].subnet_id
+  vpc_security_group_ids      = local.network_config[each.value.region].security_group_ids
+  key_name                    = local.network_config[each.value.region].key_name
   iam_instance_profile        = var.instance_profile
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
   user_data_replace_on_change = false
@@ -33,7 +29,7 @@ resource "aws_route53_record" "on_demand_record" {
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = replace(each.value.tags_all.Name, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
-  records = [coalesce(each.value.public_ip, each.value.private_ip)]
+  records  = [coalesce(each.value.public_ip, each.value.private_ip)]
   ttl      = "60"
 }
 
@@ -43,11 +39,12 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
     if jsondecode(v).lifecycle == "spot"
   }
 
+  region                      = each.value.region
   ami                         = each.value.ami
   instance_type               = each.value.serverSize
-  subnet_id                   = local.use_custom_subnet ? var.public_subnet_id : null
-  vpc_security_group_ids      = local.use_custom_security_groups ? var.security_group_ids : null
-  key_name                    = data.aws_key_pair.admin_key.key_name
+  subnet_id                   = local.network_config[each.value.region].subnet_id
+  vpc_security_group_ids      = local.network_config[each.value.region].security_group_ids
+  key_name                    = local.network_config[each.value.region].key_name
   iam_instance_profile        = var.instance_profile
   user_data                   = templatestring(data.cloudinit_config.full_script[each.key].rendered, { hostname = each.value.hostname })
   user_data_replace_on_change = false
@@ -61,6 +58,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
     Hostname     = each.value.hostname
     DeploymentID = each.value.id
     TimeToExpire = each.value.timeToExpire
+    Region       = each.value.region
     DeployedBy   = "turbo-deploy"
     UserData     = join(",", each.value.userData)
   }
@@ -70,6 +68,7 @@ resource "aws_spot_instance_request" "my_deployed_spot_instances" {
 // the tags specified in the spot request only applies to the request not the instances
 // so we have to create separate resource tags to apply to the instances
 resource "aws_ec2_tag" "name" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "Name"
@@ -77,6 +76,7 @@ resource "aws_ec2_tag" "name" {
 }
 
 resource "aws_ec2_tag" "hostname" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "Hostname"
@@ -84,6 +84,7 @@ resource "aws_ec2_tag" "hostname" {
 }
 
 resource "aws_ec2_tag" "deploymentid" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "DeploymentID"
@@ -91,6 +92,7 @@ resource "aws_ec2_tag" "deploymentid" {
 }
 
 resource "aws_ec2_tag" "timetoexpire" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "TimeToExpire"
@@ -98,6 +100,7 @@ resource "aws_ec2_tag" "timetoexpire" {
 }
 
 resource "aws_ec2_tag" "deployedby" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "DeployedBy"
@@ -105,6 +108,7 @@ resource "aws_ec2_tag" "deployedby" {
 }
 
 resource "aws_ec2_tag" "userdata" {
+  region      = each.value.tags_all.Region
   for_each    = aws_spot_instance_request.my_deployed_spot_instances
   resource_id = aws_spot_instance_request.my_deployed_spot_instances[each.key].spot_instance_id
   key         = "UserData"
@@ -116,6 +120,6 @@ resource "aws_route53_record" "spot_record" {
   type     = "A"
   zone_id  = var.hosted_zone_id
   name     = replace(each.value.tags_all.Name, "/.${data.aws_route53_zone.hosted_zone.name}/", "")
-  records = [coalesce(each.value.public_ip, each.value.private_ip)]
+  records  = [coalesce(each.value.public_ip, each.value.private_ip)]
   ttl      = "60"
 }

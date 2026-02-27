@@ -2,8 +2,10 @@ package instance
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -13,11 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/frgrisk/turbo-deploy/server/decode"
 	"github.com/frgrisk/turbo-deploy/server/models"
 	"golang.org/x/sync/errgroup"
 )
 
-var ec2Client *ec2.Client
+var ec2Clients map[string]*ec2.Client
 
 func init() {
 	cfg, err := config.LoadDefaultConfig(context.Background())
@@ -25,10 +28,52 @@ func init() {
 		log.Printf("unable to load SDK config %v", err)
 	}
 
-	ec2Client = ec2.NewFromConfig(cfg)
+	// region specific-clients
+	deploymentEnv := os.Getenv("DEPLOYMENT_CONFIG")
+
+	decodedDeploymentEnv, _ := decode.Base64Gzip(deploymentEnv)
+
+	var regionConfig models.RegionConfig
+	err = json.Unmarshal([]byte(decodedDeploymentEnv), &regionConfig)
+	if err != nil {
+		log.Printf("Error parsing deployment configuration: %v", err)
+		return
+	}
+
+	ec2Clients = make(map[string]*ec2.Client)
+	for regionName := range regionConfig {
+		ec2Clients[regionName] = ec2.NewFromConfig(cfg, func(o *ec2.Options) {
+			o.Region = regionName
+		})
+	}
 }
 
 func GetDeployedInstances() ([]models.DeploymentResponse, error) {
+	g := new(errgroup.Group)
+	var mutex sync.Mutex
+	var deployments []models.DeploymentResponse
+
+	for regionName, client := range ec2Clients {
+		g.Go(func() error {
+			results, err := getDeployedInstancesForRegion(regionName, client)
+			if err != nil {
+				return err
+			}
+			mutex.Lock()
+			defer mutex.Unlock()
+			deployments = append(deployments, results...)
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return deployments, nil
+}
+
+func getDeployedInstancesForRegion(regionName string, client *ec2.Client) ([]models.DeploymentResponse, error) {
 	input := &ec2.DescribeInstancesInput{
 		Filters: []types.Filter{
 			{
@@ -44,7 +89,7 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 
 	var deployments []models.DeploymentResponse
 
-	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, input)
+	paginator := ec2.NewDescribeInstancesPaginator(client, input)
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(context.Background())
 		if err != nil {
@@ -53,7 +98,6 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 
 		for _, reservation := range output.Reservations {
 			for _, instance := range reservation.Instances {
-				// Get image based on the instance
 				filter := []types.Filter{
 					{
 						Name:   aws.String("source-instance-id"),
@@ -65,7 +109,7 @@ func GetDeployedInstances() ([]models.DeploymentResponse, error) {
 					},
 				}
 
-				imageResult, err := GetImage(filter)
+				imageResult, err := GetImage(regionName, filter)
 				if err != nil {
 					log.Printf("failed to resolve image for instance %s: %v", *instance.InstanceId, err)
 					return nil, err
@@ -104,12 +148,12 @@ func splitUserData(userData string) []string {
 	return strings.Split(userData, ",")
 }
 
-func StartInstance(instanceID string) error {
+func StartInstance(instanceID string, region string) error {
 	input := &ec2.StartInstancesInput{
 		InstanceIds: []string{instanceID},
 	}
 
-	_, err := ec2Client.StartInstances(context.Background(), input)
+	_, err := ec2Clients[region].StartInstances(context.Background(), input)
 	if err != nil {
 		log.Printf("failed to start instance %s: %v", instanceID, err)
 		return err
@@ -119,12 +163,12 @@ func StartInstance(instanceID string) error {
 	return nil
 }
 
-func StopInstance(instanceID string) error {
+func StopInstance(instanceID string, region string) error {
 	input := &ec2.StopInstancesInput{
 		InstanceIds: []string{instanceID},
 	}
 
-	_, err := ec2Client.StopInstances(context.Background(), input)
+	_, err := ec2Clients[region].StopInstances(context.Background(), input)
 	if err != nil {
 		log.Printf("failed to stop instance %s: %v", instanceID, err)
 		return err
@@ -150,7 +194,7 @@ func getLifecycle(lifecycle types.InstanceLifecycleType) string {
 	return string(lifecycle)
 }
 
-func CaptureInstanceImage(instanceID string) (string, error) {
+func CaptureInstanceImage(instanceID string, region string) (string, error) {
 	// get tags of the instance
 	describeInstanceTags := &ec2.DescribeTagsInput{
 		Filters: []types.Filter{
@@ -161,7 +205,7 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 		},
 	}
 
-	tagsResult, err := ec2Client.DescribeTags(context.Background(), describeInstanceTags)
+	tagsResult, err := ec2Clients[region].DescribeTags(context.Background(), describeInstanceTags)
 	if err != nil {
 		log.Printf("failed to describe tags for instance %s: %v", instanceID, err)
 		return "", err
@@ -196,7 +240,7 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 			},
 		},
 	}
-	result, err := ec2Client.CreateImage(context.Background(), imageInput)
+	result, err := ec2Clients[region].CreateImage(context.Background(), imageInput)
 	if err != nil {
 		log.Printf("failed to create image for instance %s: %v", instanceID, err)
 		return "", err
@@ -206,42 +250,41 @@ func CaptureInstanceImage(instanceID string) (string, error) {
 	return aws.ToString(result.ImageId), nil
 }
 
-func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Filter) ([]models.AmiAttr, error) {
+func GetAvailableAmis(filterMap map[string][]types.Filter, region string) ([]models.AmiAttr, error) {
 	g := new(errgroup.Group)
+	var amilist []models.AmiAttr
 	var mutex sync.Mutex
 
 	for _, filter := range filterMap {
 		f := filter
 		g.Go(func() error {
-			imageResult, err := GetImage(f)
+			imageResult, err := GetImage(region, f)
 			if err != nil {
 				log.Printf("failed to retrieve images: %v", err)
 				return err
 			}
 
-			// if it exists grab it
 			if len(imageResult.Images) == 0 {
-				log.Printf("No images returned for extra listing")
+				log.Printf("No images returned for filter group")
 			} else {
-				// sort the images found by creation date
 				sort.Slice(imageResult.Images, func(i, j int) bool {
 					timeI, _ := time.Parse(time.RFC3339, *imageResult.Images[i].CreationDate)
 					timeJ, _ := time.Parse(time.RFC3339, *imageResult.Images[j].CreationDate)
-					return timeI.After(timeJ) // For descending order (newest first)
+					return timeI.After(timeJ)
 				})
 				mutex.Lock()
+				defer mutex.Unlock()
 				for _, image := range imageResult.Images {
-					amiAttr := models.AmiAttr{
+					amilist = append(amilist, models.AmiAttr{
 						AmiID:   *image.ImageId,
 						AmiName: *image.Name,
-					}
-					amilist = append(amilist, amiAttr)
+					})
 				}
-				defer mutex.Unlock()
 			}
 			return err
 		})
 	}
+
 	if err := g.Wait(); err != nil {
 		log.Printf("Failed to get available AMIs: %v", err)
 		return nil, err
@@ -250,54 +293,21 @@ func GetAvailableAmis(amilist []models.AmiAttr, filterMap map[string][]types.Fil
 	return amilist, nil
 }
 
-// GetAMIName assigns names to AMI attributes by fetching the image details from AWS
-// using the AMI IDs provided in the ami slice. It uses goroutines to fetch names
-// concurrently for each AMI ID, improving performance when dealing with multiple AMIs.
-func GetAMIName(ami []models.AmiAttr) ([]models.AmiAttr, error) {
-	g := new(errgroup.Group)
-	for index := range ami {
-		i := index
-		g.Go(func() error {
-			filter := []types.Filter{
-				{
-					Name:   aws.String("image-id"),
-					Values: []string{ami[i].AmiID},
-				},
-			}
-			imageResult, err := GetImage(filter)
-			if err == nil {
-				ami[i].AmiName = *imageResult.Images[0].Name
-			}
-			return err
-		})
-	}
-	if err := g.Wait(); err != nil {
-		log.Printf("Failed to get AMI names: %v", err)
-		return nil, err
-	}
-	return ami, nil
-}
-
-func GetImage(filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
+func GetImage(region string, filter []types.Filter) (*ec2.DescribeImagesOutput, error) {
 	describeInstanceImage := &ec2.DescribeImagesInput{
 		Filters: filter,
 	}
 
-	imageResult, err := ec2Client.DescribeImages(context.Background(), describeInstanceImage)
-	if err != nil {
-		return nil, err
-	}
-
-	return imageResult, nil
+	return ec2Clients[region].DescribeImages(context.Background(), describeInstanceImage)
 }
 
-func DeregisterImage(imageID string) error {
+func DeregisterImage(imageID string, region string) error {
 	describeDeregisterImage := &ec2.DeregisterImageInput{
 		ImageId:                   aws.String(imageID),
 		DeleteAssociatedSnapshots: aws.Bool(true),
 	}
 
-	_, err := ec2Client.DeregisterImage(context.Background(), describeDeregisterImage)
+	_, err := ec2Clients[region].DeregisterImage(context.Background(), describeDeregisterImage)
 	if err != nil {
 		log.Printf("failed to deregister image %s: %v", imageID, err)
 		return err

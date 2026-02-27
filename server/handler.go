@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -27,6 +28,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -86,9 +88,9 @@ func SetupRoutes(r *gin.Engine) {
 	r.GET("/awsdata", GetAWSData)
 
 	// Capture instance Ami
-	r.PUT("/instance-ami/:id/capture", CaptureInstanceAMI)
-	r.GET("/instance-ami/:instance_id/check-limit", CheckAMILimit)
-	r.DELETE("/instance-ami/:instance_id/:image_id", DeleteInstanceAMI)
+	r.PUT("/instance-ami/:id", CaptureInstanceAMI)
+	r.GET("/instance-ami/:id", CheckAMILimit)
+	r.DELETE("/instance-ami/:id", DeleteInstanceAMI)
 }
 
 func CreateInstanceRequest(c *gin.Context) {
@@ -272,62 +274,23 @@ func DeleteAllInstanceRequests(c *gin.Context) {
 
 func GetAWSData(c *gin.Context) {
 	// read env variable
-	configEnv := os.Getenv("MY_AMI_ATTR")
-	regionEnv := os.Getenv("MY_REGION")
-	filterEnv := os.Getenv("AMI_FILTERS")
+	deploymentEnv := os.Getenv("DEPLOYMENT_CONFIG")
 	userdataEnv := os.Getenv("USER_SCRIPTS")
 
-	tempConfig := models.TempConfig{}
-	config := models.Config{}
+	config := models.RegionConfig{}
 
-	// get list of userdata scripts from the env
-	err := json.Unmarshal([]byte(userdataEnv), &config.UserData)
+	decodedDeploymentEnv, _ := decode.Base64Gzip(deploymentEnv)
+
+	// get deployment configuration
+	err := json.Unmarshal([]byte(decodedDeploymentEnv), &config)
 	if err != nil {
 		log.Printf("Error parsing environment variable: %v", err)
 		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	// get list of AMIs from the env
-	err = json.Unmarshal([]byte(configEnv), &tempConfig)
-	if err != nil {
-		log.Printf("Error parsing environment variable: %v", err)
-		abortWithLog(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Remove empty strings from the Ami config and add any amis to amilist
-	var amilist []models.AmiAttr
-	for _, ami := range tempConfig.Ami {
-		if ami != "" {
-			amiID := models.AmiAttr{
-				AmiID: ami,
-			}
-			amilist = append(amilist, amiID)
-		}
-	}
-
-	amilist, err = instance.GetAMIName(amilist)
-	if err != nil {
-		log.Printf("Failed to get AMI names: %v", err)
-		abortWithLog(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	decodedFilter, _ := decode.Base64Gzip(filterEnv)
-
-	var filterMap map[string][]types.Filter
-
-	// get list of AMIs from the filters provided by user
-	err = json.Unmarshal([]byte(decodedFilter), &filterMap)
-	if err != nil {
-		log.Printf("Error parsing environment variable: %v", err)
-		abortWithLog(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	// manually add mandatory filter to the map
-	filterMap["snapshot-ami"] = []types.Filter{
+	// Append snapshot filter to the map
+	mandatoryFilters := []types.Filter{
 		{
 			Name:   aws.String("is-public"),
 			Values: []string{"false"},
@@ -342,23 +305,55 @@ func GetAWSData(c *gin.Context) {
 		},
 	}
 
-	// add the amis retrieved based on filters given
-	amilist, err = instance.GetAvailableAmis(amilist, filterMap)
-	if err != nil {
-		log.Printf("Error retrieving available AMIs: %v", err)
+	for regionName, region := range config {
+		region.AMIFilters["snapshot-ami"] = mandatoryFilters
+		config[regionName] = region
+	}
+
+	// Get the available AMIs from each region
+	response := models.RegionConfigResponse{}
+	var mutex sync.Mutex
+	g := new(errgroup.Group)
+	for regionName, region := range config {
+		g.Go(func() error {
+			amis, err := instance.GetAvailableAmis(region.AMIFilters, regionName)
+			if err != nil {
+				log.Printf("Failed to get AMIs for region %s: %v", regionName, err)
+				return err
+			}
+
+			mutex.Lock()
+			defer mutex.Unlock()
+			response[regionName] = models.RegionResponse{
+				Ami:           amis,
+				InstanceTypes: region.InstanceTypes,
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
 		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	config.Region = regionEnv
-	config.ServerSizes = tempConfig.ServerSizes
-	config.Ami = amilist
+	var userScripts []string
+	err = json.Unmarshal([]byte(userdataEnv), &userScripts)
+	if err != nil {
+		log.Printf("Error parsing user scripts: %v", err)
+		abortWithLog(c, http.StatusInternalServerError, err)
+		return
+	}
 
-	c.JSON(http.StatusOK, config)
+	c.JSON(http.StatusOK, models.LaunchResponse{
+		Regions:     response,
+		UserScripts: userScripts,
+	})
 }
 
 func abortWithLog(c *gin.Context, statusCode int, err error) {
 	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
+		//nolint:gosec
 		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
 	}
 }
@@ -396,15 +391,6 @@ func GetEC2InstanceTypes(ctx context.Context) ([]string, error) {
 }
 
 func GetDeployedRequest(c *gin.Context) {
-	ctx := c.Request.Context() // Extract the standard context from Gin's context
-	if err := PopulateSpotTagResponse(ctx); err != nil {
-		log.Printf("Failed to populate tags for deployed instances: %v", err)
-		if abortErr := c.AbortWithError(http.StatusInternalServerError, err); abortErr != nil {
-			log.Printf("Failed to abort with error: %v", abortErr)
-		}
-		return
-	}
-
 	instances, err := instance.GetDeployedInstances()
 	if err != nil {
 		log.Printf("Failed to get deployed instances: %v", err)
@@ -419,8 +405,9 @@ func GetDeployedRequest(c *gin.Context) {
 
 func StartInstanceRequest(c *gin.Context) {
 	instanceID := c.Param(pathParameterName)
+	region := c.Query("region")
 
-	if err := instance.StartInstance(instanceID); err != nil {
+	if err := instance.StartInstance(instanceID, region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -430,8 +417,9 @@ func StartInstanceRequest(c *gin.Context) {
 
 func StopInstanceRequest(c *gin.Context) {
 	instanceID := c.Param(pathParameterName)
+	region := c.Query("region")
 
-	if err := instance.StopInstance(instanceID); err != nil {
+	if err := instance.StopInstance(instanceID, region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -439,73 +427,18 @@ func StopInstanceRequest(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func PopulateSpotTagResponse(ctx context.Context) error {
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		log.Printf("Failed to load AWS SDk Config: %v", err)
-		return err
-	}
-
-	ec2Client := ec2.NewFromConfig(cfg)
-
-	// Get all EC2 instances
-	instancesResp, err := ec2Client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{})
-	if err != nil {
-		log.Printf("error describing EC2 instances: %v", err)
-		return err
-	}
-
-	// Get all Spot instance requests
-	spotResp, err := ec2Client.DescribeSpotInstanceRequests(ctx, &ec2.DescribeSpotInstanceRequestsInput{})
-	if err != nil {
-		log.Printf("error describing EC2 spot instances: %v", err)
-		return err
-	}
-
-	// Create a map to associate spot instance request IDs with their tags
-	requestTags := make(map[string][]types.Tag)
-	for _, request := range spotResp.SpotInstanceRequests {
-		requestTags[*request.SpotInstanceRequestId] = request.Tags
-	}
-
-	for _, reservation := range instancesResp.Reservations {
-		for _, instance := range reservation.Instances {
-			// check if the instance is a spot instance and has a corresponding spot req
-			if instance.InstanceLifecycle == types.InstanceLifecycleTypeSpot && instance.SpotInstanceRequestId != nil {
-				spotRequestID := *instance.SpotInstanceRequestId
-				if tags, ok := requestTags[spotRequestID]; ok {
-					// Check if instance already has tags; if not, apply them
-					if len(instance.Tags) == 0 {
-						_, err := ec2Client.CreateTags(ctx, &ec2.CreateTagsInput{
-							Resources: []string{*instance.InstanceId},
-							Tags:      tags,
-						})
-						if err != nil {
-							log.Printf("Failed to create tags for instance %s: %v", *instance.InstanceId, err)
-							return err
-						}
-						log.Printf("Tags from Spot Request %s have been applied to Instance %s", spotRequestID, *instance.InstanceId)
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
-const instanceParameterName = "instance_id"
-
 func CheckAMILimit(c *gin.Context) {
 	maxAMIsAllowed := 3
 
-	id := c.Param(instanceParameterName)
-	log.Println("capture instance image request for instance:", id)
+	instanceID := c.Param(pathParameterName)
+	region := c.Query("region")
+	log.Println("capture instance image request for instance:", instanceID)
 
 	// check if an image for that instance already exists
 	filter := []types.Filter{
 		{
 			Name:   aws.String("source-instance-id"),
-			Values: []string{id},
+			Values: []string{instanceID},
 		},
 		{
 			Name:   aws.String("is-public"),
@@ -513,9 +446,9 @@ func CheckAMILimit(c *gin.Context) {
 		},
 	}
 
-	imageResult, err := instance.GetImage(filter)
+	imageResult, err := instance.GetImage(region, filter)
 	if err != nil {
-		log.Printf("failed to resolve image for instance %s: %v", id, err)
+		log.Printf("failed to resolve image for instance %s: %v", instanceID, err)
 	}
 
 	if len(imageResult.Images) >= maxAMIsAllowed {
@@ -547,14 +480,17 @@ func CheckAMILimit(c *gin.Context) {
 }
 
 func DeleteInstanceAMI(c *gin.Context) {
-	id := c.Param(instanceParameterName)
-	imageID := c.Param("image_id")
+	recordID := c.Param(pathParameterName)
+	region := c.Query("region")
+	imageID := c.Query("image_id")
 
-	log.Println("delete ami request for id:", id)
+	log.Println("delete ami request for id:", recordID)
 
 	log.Printf("Attempting to delete image with ID: %s", imageID)
 
-	if err := instance.DeregisterImage(imageID); err != nil {
+	log.Printf("The value of region is: %v", region)
+
+	if err := instance.DeregisterImage(imageID, region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -574,10 +510,12 @@ func CaptureInstanceAMI(c *gin.Context) {
 	}
 
 	id := c.Param(pathParameterName)
-	log.Println("create ami request for id:", id)
+	log.Println("create ami request for record:", id)
+
+	req.Region = strings.TrimRight(req.Region, "abcdefghijklmnopqrstuvwxyz")
 
 	var amiID string
-	if amiID, err = instance.CaptureInstanceImage(req.InstanceID); err != nil {
+	if amiID, err = instance.CaptureInstanceImage(req.InstanceID, req.Region); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
