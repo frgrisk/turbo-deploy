@@ -15,10 +15,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterModule } from '@angular/router';
-import { Observable, Subject, filter, switchMap, takeUntil, tap } from 'rxjs';
+import { Observable, Subject, filter, switchMap, takeUntil, tap, startWith, map } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { AsyncPipe } from '@angular/common';
-import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
+import { AsyncPipe, KeyValuePipe } from '@angular/common';
+import { Lifecycle, TimeUnit, AmiAttr, RegionData } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { ApiService } from '../shared/services/api.service';
 import { DeploymentsService } from '../shared/services/deployments.service';
@@ -48,6 +48,7 @@ import { AmiAutocompleteService } from '../shared/services/ami-autocomplete.serv
     MatAutocompleteModule,
     MatProgressSpinnerModule,
     AsyncPipe,
+    KeyValuePipe,
   ],
   templateUrl: './edit-deployment.component.html',
   styleUrl: './edit-deployment.component.scss',
@@ -60,6 +61,7 @@ export class EditDeploymentComponent {
   amis: AmiAttr[] = [];
   userData: string[] = [];
   region: string = '';
+  regionConfig: Record<string, RegionData> = {};
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
   currentExpiry: string = '';
@@ -122,10 +124,8 @@ export class EditDeploymentComponent {
       .getAWSData()
       .pipe(
         tap((data) => {
-          this.serverSizes = data.serverSizes;
-          this.amis = data.amis;
-          this.region = data.regions;
-          this.userData = data.userData;
+          this.regionConfig = data.regions;
+          this.userData = data.user_scripts;
         }),
         switchMap(() => this.deploymentService.currentEdit$),
         filter((editObject): editObject is string => !!editObject),
@@ -147,15 +147,31 @@ export class EditDeploymentComponent {
 
         this.editDeploymentForm.patchValue(formData, { emitEvent: false });
 
+        // listen to region changes and update amis and serverSizes
+        let isFirstEmit = true;
+
+        this.editDeploymentForm.get('region')?.valueChanges.pipe(
+          startWith(response.Region)
+        ).subscribe(selectedRegion => {
+          const regionData = this.regionConfig[selectedRegion];
+          this.amis = regionData.amis;
+          this.serverSizes = regionData.instance_types;
+
+          if (isFirstEmit) {
+            isFirstEmit = false;
+          } else {
+            this.editDeploymentForm.get('ami')?.setValue('', { emitEvent: false });
+          }
+
+          this.filteredAmis$ = this.amiAutocomplete.setup(
+            this.editDeploymentForm,
+            this.amis,
+          );
+        });
+
         // Store original values
         this.originalFormValue = this.editDeploymentForm.getRawValue();
-
         this.currentExpiry = convertDateTime(response.TimeToExpire);
-
-        this.filteredAmis$ = this.amiAutocomplete.setup(
-          this.editDeploymentForm,
-          this.amis,
-        );
       });
   }
 
@@ -192,6 +208,11 @@ export class EditDeploymentComponent {
 
   private getWarnings(changedFields: string[]): string[] {
     const warnings: string[] = [];
+
+    // Check if region changed
+    if (changedFields.includes('region')) {
+      warnings.push('Region');
+    }
 
     // Check if AMI changed
     if (changedFields.includes('ami')) {

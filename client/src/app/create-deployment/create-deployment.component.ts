@@ -15,10 +15,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterModule } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AsyncPipe } from '@angular/common';
-import { Observable, Subject } from 'rxjs';
+import { AsyncPipe, KeyValuePipe } from '@angular/common';
+import { Observable, Subject, startWith, map } from 'rxjs';
 import { ApiService } from '../shared/services/api.service';
-import { Lifecycle, TimeUnit, AmiAttr } from '../shared/enum/dropdown.enum';
+import { Lifecycle, TimeUnit, AmiAttr, RegionData } from '../shared/enum/dropdown.enum';
 import { DeploymentApiRequest } from '../shared/model/deployment-request';
 import { convertToHours } from '../shared/util/time.util';
 import {
@@ -45,6 +45,7 @@ import { AmiAutocompleteService } from '../shared/services/ami-autocomplete.serv
     MatAutocompleteModule,
     MatProgressSpinnerModule,
     AsyncPipe,
+    KeyValuePipe,
   ],
   templateUrl: './create-deployment.component.html',
   styleUrls: ['./create-deployment.component.scss'],
@@ -57,6 +58,7 @@ export class CreateDeploymentComponent implements OnInit {
   amis: AmiAttr[] = [];
   userData: string[] = [];
   region: string = '';
+  regionConfig: Record<string, RegionData> = {};
   lifecycles: Lifecycle[] = [Lifecycle.ON_DEMAND, Lifecycle.SPOT];
   ttlUnits: TimeUnit[] = [TimeUnit.HOURS, TimeUnit.DAYS, TimeUnit.MONTHS];
   filteredAmis$!: Observable<AmiAttr[]>;
@@ -110,17 +112,36 @@ export class CreateDeploymentComponent implements OnInit {
 
   initializeAWSData() {
     this.apiService.getAWSData().subscribe((data) => {
-      this.serverSizes = data.serverSizes;
-      this.amis = data.amis;
-      this.region = data.regions;
-      this.userData = data.userData;
-      this.deploymentForm.get('serverSize')?.patchValue('t3.medium');
-      this.deploymentForm.get('ami')?.patchValue(this.amis[0].amiIds);
-      this.deploymentForm.get('region')?.patchValue(this.region);
-      this.filteredAmis$ = this.amiAutocomplete.setup(
-        this.deploymentForm,
-        this.amis,
-      );
+      this.regionConfig = data.regions;
+      this.userData = data.user_scripts;
+
+      // set default region
+      const defaultRegion = Object.keys(data.regions)[0];
+      this.deploymentForm.get('region')?.patchValue(defaultRegion);
+
+      let isFirstEmit = true;
+
+      // listen to region changes
+      this.deploymentForm.get('region')?.valueChanges.pipe(
+        startWith(defaultRegion)
+      ).subscribe(selectedRegion => {
+        const regionData = this.regionConfig[selectedRegion];
+        this.amis = regionData.amis;
+        this.serverSizes = regionData.instance_types;
+
+        this.deploymentForm.get('serverSize')?.patchValue(this.serverSizes[0]);
+
+        if (isFirstEmit) {
+          isFirstEmit = false;
+        } else {
+          this.deploymentForm.get('ami')?.setValue('', { emitEvent: false });
+        }
+
+        this.filteredAmis$ = this.amiAutocomplete.setup(
+          this.deploymentForm,
+          this.amis,
+        );
+      });
     });
   }
 

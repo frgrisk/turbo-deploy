@@ -40,7 +40,7 @@ export class SnapshotConfirmationDialogComponent {
     };
 
     this.apiService
-      .checkAmiLimit(this.data.instanceElement.ec2InstanceId)
+      .checkAmiLimit(this.data.instanceElement.ec2InstanceId, this.data.instanceElement.availabilityZone.slice(0, -1))
       .pipe(
         switchMap((response) => {
           if (response.ami_limit_hit) {
@@ -58,12 +58,8 @@ export class SnapshotConfirmationDialogComponent {
                 if (!confirmed) {
                   return EMPTY;
                 }
-                const deletePayload = {
-                  instance_id: this.data.instanceElement.deploymentId,
-                  image_id: response.oldest_image_id,
-                };
                 return this.apiService
-                  .deleteInstanceAmi(deletePayload)
+                  .deleteInstanceAmi(this.data.instanceElement.deploymentId, this.data.instanceElement.availabilityZone.slice(0, -1), response.oldest_image_id)
                   .pipe(
                     switchMap(() =>
                       this.apiService.captureInstanceAmi(apiPayload),

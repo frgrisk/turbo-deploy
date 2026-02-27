@@ -17,3 +17,13 @@ export interface AmiAttr {
   amiIds: string;
   amiNames: string;
 }
+
+export interface RegionData {
+  amis: AmiAttr[];
+  instance_types: string[];
+}
+
+export interface AWSDataResponse {
+  regions: Record<string, RegionData>;
+  user_scripts: string[];
+}
