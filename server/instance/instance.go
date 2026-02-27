@@ -20,9 +20,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var (
-	ec2Clients map[string]*ec2.Client
-)
+var ec2Clients map[string]*ec2.Client
 
 func init() {
 	cfg, err := config.LoadDefaultConfig(context.Background())

@@ -281,7 +281,7 @@ func GetAWSData(c *gin.Context) {
 	// get deployment configuration
 	err := json.Unmarshal([]byte(decodedDeploymentEnv), &config)
 	if err != nil {
-		log.Printf("Error parsing environment variable: %v", err) //nolint:G706
+		log.Printf("Error parsing environment variable: %v", err)
 		abortWithLog(c, http.StatusInternalServerError, err)
 		return
 	}
@@ -338,7 +338,7 @@ func GetAWSData(c *gin.Context) {
 
 func abortWithLog(c *gin.Context, statusCode int, err error) {
 	if abortErr := c.AbortWithError(statusCode, err); abortErr != nil {
-		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr)
+		log.Printf("Failed to abort with status %d: %v", statusCode, abortErr) //nolint:G706
 	}
 }
 
